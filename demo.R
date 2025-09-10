@@ -1,7 +1,6 @@
 if(!require("EnvStats")) install.packages("EnvStats")
 library(EnvStats)
 
-numSimulationRuns = 1000
 allPolicies = c("P1", "P2", "P3")
 allActivities = c("a", "b", "c", "d")
 activityProbability = list(a = 0.6, b = 0.3, c = 0.1, d = 0.25)
@@ -34,13 +33,13 @@ getAffectedPolicies <- function(event) {
 }
 #getAffectedPolicies(c("b", "c")) # test
 
-sampleEvents <- function(eventRate = 0.6) {
-  # return a vector of events with fields:
+sampleEvents <- function(eventRate = 2.5) {
+  # return a list of events with fields:
   #   severity (number)
   #   activities (list of affected activities)
   globalVariables(c("allActivities", "sampleSeverity", "activityProbability"))
   numEvents <- rpois(1, eventRate)
-  events = c()
+  events = list()
   if(numEvents == 0) {return(events)}
   
   for (eventNum in 1:numEvents) {
@@ -52,7 +51,7 @@ sampleEvents <- function(eventRate = 0.6) {
         event$activities = append(event$activities, activity)
         }
     }
-    events = c(events, event)
+    events = append(events, list(event))
   }
   return(events)
 }
@@ -73,3 +72,20 @@ calculateLoss <- function(event, shockStd = 1.0) {
 }
 #event = list(severity = 10, activities = list("a", "b")) # test
 #calculateLoss(event) # test
+
+runSimulation <- function(numSimulationRuns = 1000, confidenceLevel = 0.90) {
+  losses = c()
+  for(simulationRun in 1:numSimulationRuns) {
+    simulationLoss = 0.0
+    events = sampleEvents()
+    for(event in events) {
+      simulationLoss = simulationLoss + calculateLoss(event)
+    }
+    losses = c(losses, simulationLoss)
+    
+  }
+  hist(losses, breaks = 50)
+  cat("Lower bound: ", quantile(losses, (1-confidenceLevel) / 2), "\n")
+  cat("Upper bound: ", quantile(losses, (1 + confidenceLevel) / 2),"\n")
+}
+runSimulation()
