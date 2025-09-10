@@ -1,6 +1,7 @@
 if(!require("EnvStats")) install.packages("EnvStats")
 library(EnvStats)
 
+numSimulationRuns = 1000
 allPolicies = c("P1", "P2", "P3")
 allActivities = c("a", "b", "c", "d")
 activityProbability = list(a = 0.6, b = 0.3, c = 0.1, d = 0.25)
@@ -17,7 +18,8 @@ sampleSeverity <- function(numSamples = 1, mu = 1, sigma = 0.5, aPar = 2, lambda
 }
 #sampleSeverity(10, mu = 1, sigma = 0.1, aPar = 1.5, lambdaPar = 20, p = 0.5) # test
 
-getAffectedPolicies <- function(affectedActivities) {
+getAffectedPolicies <- function(event) {
+  affectedActivities = event$activities
   globalVariables(coveredBusinessActivities)
   affectedPolicies = c()
   for(policy in names(coveredBusinessActivities)) {
