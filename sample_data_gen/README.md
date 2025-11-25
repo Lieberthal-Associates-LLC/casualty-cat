@@ -16,6 +16,7 @@ We generate a nonzero number of policies for each slice of each company's risk. 
 
 | Field Name | Generation Procedure |
 | ---------- | ---------------------------- |
+| Policy ID | Sequentially assigned |
 | Policy Count | Sampled $1 + \mathrm{Pois}(0.05)$ |
 | Policy Inception Date | Randomly sample date in the past |
 | Policy Expiration Date | Randomly sample date in the future |
