@@ -5,13 +5,16 @@ from datetime import datetime, timedelta
 NUM_COMPANIES = 1000
 MIN_LAT, MAX_LAT = 33., 42.
 MIN_LONG, MAX_LONG = -119., -80.
-MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 3, 8
+MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
 MIN_EXPOSURE = 0.
 MAX_EXPOSURE = 0.5 / NUM_COMPANIES
 SAME_INDUSTRY_EXPOSURE_ADJUSTMENT = 2.0
 MIN_POLICIES_PER_SLICE = 1
 EXPECTED_POLICIES_PER_SLICE = 1.2
 EXPECTED_POLICY_MULTIPLIER = 1.05
+RISK_SLICE_GRANULARITY = -6 # millions
+PARTITION_GRANULARITY = 1 # tenths
+RISK_ID_INCREMENT_PROBABILITY = 0.9
 
 STATE_NAMES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -49,19 +52,22 @@ PERILS = [
 
 EXPOSURE_BASES = ["Payroll", "Revenue", "Sales", "Number of Employees"]
 
-def gen_random_date(startDateStr, endDateStr):
+def gen_random_dates(startDateStr, endDateStr, yearsDistribution : list[int]):
     startDate = pd.to_datetime(startDateStr)
     endDate = pd.to_datetime(endDateStr)
     delta = endDate - startDate
     randomNumDays = random.randrange(delta.days)
     randomDelta = timedelta(days = randomNumDays)
-    return str(startDate + randomDelta)
+    firstDate = startDate + randomDelta
+    secondDate = firstDate + timedelta(days = 365 * random.choice(yearsDistribution))
+    return str(firstDate), str(secondDate) 
 
 def gen_partition(numParts):
     parts = []
     amountLeft = 1.
     for i in range(numParts - 1):
         part = random.uniform(0, amountLeft)
+        part = round(part, PARTITION_GRANULARITY)
         amountLeft -= part
         parts.append(part)
     parts.append(amountLeft)
@@ -73,6 +79,12 @@ def trim_float(x):
     highestDigit = int(np.log10(abs(x)))-1 # -1 for (.1, 1]
     precision = min(2, max(2, -highestDigit+2))
     return f"{x:.{precision}f}"
+
+def numToLetters(i : int):
+    left, right = divmod(i, 26)
+    if left == 0:
+        return ALPHABET[right]
+    return f"{left}{ALPHABET[right]}"
 
 class Company:
     def __init__(self, compId, compName, coords, state,
@@ -89,7 +101,7 @@ class Company:
         self.exposedAmount = expAmount
         self.risk_slices = self.gen_risk_slices()
     
-    def gen_risk_slices(self, maxNumSlices = 5, minSlice = 0.05, maxSlice = 0.15):
+    def gen_risk_slices(self, maxNumSlices = 5, minSlice = 0.05, maxSlice = 0.2):
         numSlices = random.randrange(1, maxNumSlices+1)
         topThresh = 1. * self.exposedAmount
         bottomThresh = 1. * self.exposedAmount
@@ -97,6 +109,7 @@ class Company:
         slices = []
         for sliceInd in range(numSlices):
             sliceWidth = self.exposedAmount * random.uniform(minSlice, maxSlice)
+            sliceWidth = round(sliceWidth, RISK_SLICE_GRANULARITY)
             bottomThresh = topThresh - sliceWidth
             slices.append((bottomThresh, topThresh))
             topThresh = bottomThresh
@@ -114,7 +127,7 @@ f"""{self.name} (id {self.id}):
         return str(self)
 class Policy:
     nextPolId = 0
-    def __init__(self, comp: Company, polCount, startDate, endDate,
+    def __init__(self, comp: Company, polCount, riskId, startDate, endDate,
                  renewalInd, lineOfBusiness, perils,
                  expBase, riskFloor, riskCeil, participation,
                  expGrossLossRatio, riskPerEventLimit
@@ -123,6 +136,7 @@ class Policy:
         Policy.nextPolId += 1
         self.comp = comp
         self.polCount = polCount
+        self.riskId = numToLetters(riskId)
         self.startDate = startDate
         self.endDate = endDate
         self.renewalInd = renewalInd
@@ -142,6 +156,7 @@ class Policy:
         return {
                 "Insured ID": self.comp.id,
                 "Policy Count": self.polCount,
+                "Risk ID" : self.riskId,
                 "Insured Name": self.comp.name,
                 "Insured Address": self.comp.state,
                 "Insured Latitude": self.comp.latitude,
@@ -173,6 +188,7 @@ def gen_comps(numComps = NUM_COMPANIES):
         state = random.choice(STATE_NAMES)
         industry = random.choice(ACT_NAMES)
         exposedAmt = 10 ** random.uniform(MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT)
+        exposedAmt = round(exposedAmt, RISK_SLICE_GRANULARITY)
         actExposures = {act : random.uniform(MIN_EXPOSURE, MAX_EXPOSURE) for act in ACT_NAMES}
         actExposures[industry] *= SAME_INDUSTRY_EXPOSURE_ADJUSTMENT
         actExposures[industry] = min(1, actExposures[industry])
@@ -184,29 +200,32 @@ def gen_comps(numComps = NUM_COMPANIES):
     return companies
 
 def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity = 0.9):
+    riskId = 0
     for [riskFloor, riskCeil] in comp.risk_slices:
         for lineOfBusiness in LINES_OF_BUSINESS:
             if random.random() > policyDensity:
                 continue
             numPolicies = (MIN_POLICIES_PER_SLICE +
                        np.random.poisson(EXPECTED_POLICIES_PER_SLICE - MIN_POLICIES_PER_SLICE))
-            participations = gen_partition(numPolicies)
+            # participations = gen_partition(numPolicies)
             for policyIdx in range(numPolicies):
-                participation = participations[policyIdx]
-                startDate = gen_random_date(startDateStr = "Jan 1, 1990", endDateStr = "Jan 1, 2024")
-                expDate = gen_random_date(startDateStr = "Jan 1, 2027", endDateStr = "Jan 1, 2030")
-                # renewalInd = random.choice([True, False])
-                renewalInd = "Yes"
-                numPerils = random.randrange(len(PERILS))
+                participation = 1 / numPolicies
+                startDate, expDate = gen_random_dates(startDateStr = "Jan 1, 2020", endDateStr = "Jan 1, 2024", yearsDistribution = [1, 3, 5, 10])
+                renewalInd = random.choice([True, False])
+                # renewalInd = "Yes"
+                numPerils = random.randrange(1, len(PERILS))
                 perils = random.sample(PERILS, numPerils)
                 expBase = random.choice(EXPOSURE_BASES)
-                expGrossLossRatio = random.uniform(0.1, 0.9)
+                expGrossLossRatio = random.uniform(0.5, 0.9)
                 policyMultiplier = 1 + np.random.poisson(EXPECTED_POLICY_MULTIPLIER - 1)
                 participation /= policyMultiplier
                 riskPerEventLimit = (riskCeil - riskFloor) * participation * random.uniform(0.1, 1)
-                policy = Policy(comp, policyMultiplier, startDate, expDate, renewalInd, lineOfBusiness, perils,
+                riskPerEventLimit = round(riskPerEventLimit, RISK_SLICE_GRANULARITY)
+                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit)
                 policyList.append(policy)
+                if random.random() < RISK_ID_INCREMENT_PROBABILITY:
+                    riskId += 1
 """def __init__(self, polId, comp: Company, polCount, startDate, endDate,
                  renewalInd, lineOfBusiness, perils,
                  expBase, riskFloor, riskCeil, participation,
