@@ -101,11 +101,12 @@ class Company:
         self.exposedAmount = expAmount
         self.risk_slices = self.gen_risk_slices()
     
-    def gen_risk_slices(self, maxNumSlices = 5, minSlice = 0.05, maxSlice = 0.2):
+    def gen_risk_slices(self, maxNumSlices = 5, minSlice = 0.051, maxSlice = 0.2):
         numSlices = random.randrange(1, maxNumSlices+1)
         topThresh = 1. * self.exposedAmount
         bottomThresh = 1. * self.exposedAmount
         assert maxSlice * numSlices <= 1.
+        assert minSlice * 10 ** MIN_LOG10_EXPOSURE_AMT > 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
         slices = []
         for sliceInd in range(numSlices):
             sliceWidth = self.exposedAmount * random.uniform(minSlice, maxSlice)
@@ -202,6 +203,9 @@ def gen_comps(numComps = NUM_COMPANIES):
 def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity = 0.9):
     riskId = 0
     for [riskFloor, riskCeil] in comp.risk_slices:
+        # if riskFloor == riskCeil:
+        #     print(f"Size 0 chunk")
+        #     continue
         for lineOfBusiness in LINES_OF_BUSINESS:
             if random.random() > policyDensity:
                 continue
