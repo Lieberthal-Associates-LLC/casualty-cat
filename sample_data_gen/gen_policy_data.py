@@ -15,6 +15,13 @@ EXPECTED_POLICY_MULTIPLIER = 1.05
 RISK_SLICE_GRANULARITY = -6 # millions
 PARTITION_GRANULARITY = 1 # tenths
 RISK_ID_INCREMENT_PROBABILITY = 0.9
+MIN_RISK_SLICE = 0.051
+MAX_RISK_SLICE = 0.2
+MAX_NUM_RISK_SLICES = 5
+
+
+assert MAX_RISK_SLICE * MAX_NUM_RISK_SLICES <= 1. # no chance of overflowing risk tower
+assert MIN_RISK_SLICE * 10 ** MIN_LOG10_EXPOSURE_AMT > 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
 
 STATE_NAMES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -101,12 +108,11 @@ class Company:
         self.exposedAmount = expAmount
         self.risk_slices = self.gen_risk_slices()
     
-    def gen_risk_slices(self, maxNumSlices = 5, minSlice = 0.051, maxSlice = 0.2):
+    def gen_risk_slices(self, maxNumSlices = MAX_NUM_RISK_SLICES, minSlice = MIN_RISK_SLICE, maxSlice = MAX_RISK_SLICE):
         numSlices = random.randrange(1, maxNumSlices+1)
         topThresh = 1. * self.exposedAmount
         bottomThresh = 1. * self.exposedAmount
-        assert maxSlice * numSlices <= 1.
-        assert minSlice * 10 ** MIN_LOG10_EXPOSURE_AMT > 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
+        
         slices = []
         for sliceInd in range(numSlices):
             sliceWidth = self.exposedAmount * random.uniform(minSlice, maxSlice)
