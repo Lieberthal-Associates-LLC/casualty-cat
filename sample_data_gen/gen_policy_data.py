@@ -32,15 +32,15 @@ STATE_NAMES = [
 ]
 LINES_OF_BUSINESS = [
     "General Liability",
-    # "Auto Liability",
-    # "Product Liability",
+    "Auto Liability",
+    "Product Liability",
     "Professional Liability",
-    # "Medical Malpractice",
-    # "Workers Compensation",
-    # "Employment Practices (EPLI)",
-    # "Umbrella",
-    # "Directors & Officers",
-    # "Property, Inland Marine"
+    "Medical Malpractice",
+    "Workers Compensation",
+    "Employment Practices (EPLI)",
+    "Umbrella",
+    "Directors & Officers",
+    "Property, Inland Marine"
 ]
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ACT_NAMES = [11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92]
@@ -180,7 +180,7 @@ class Policy:
                 "Attachment Point for Excess Treaties": self.riskCeil,
                 "Participation": self.participation,
                 "Expected Gross Loss Ratio": self.expGrossLossRatio,
-                "Risk per Occurence Layer Limit": self.riskPerEventLimit,
+                "Risk per Occurrence Layer Limit": self.riskPerEventLimit,
                 "Risk Annual Aggregate Layer Limit": self.rectWidth
                 }
 def gen_comp_name(nameLength = 3):
