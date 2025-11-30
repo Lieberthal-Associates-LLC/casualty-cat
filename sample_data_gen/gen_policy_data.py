@@ -176,7 +176,7 @@ class Policy:
                 **(self.perilDict),
                 "Exposure Base": self.expBase,
                 "Exposure Amount" : self.comp.exposedAmount,
-                "Deductible": self.riskFloor,
+                "Deductible / Self-Insured Retention": self.riskFloor,
                 "Attachment Point for Excess Treaties": self.riskCeil,
                 "Participation": self.participation,
                 "Expected Gross Loss Ratio": self.expGrossLossRatio,
