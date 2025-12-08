@@ -18,6 +18,7 @@ RISK_ID_INCREMENT_PROBABILITY = 0.9
 MIN_RISK_SLICE = 0.051
 MAX_RISK_SLICE = 0.2
 MAX_NUM_RISK_SLICES = 5
+NUMERICAL_SCALE = 1000
 
 
 assert MAX_RISK_SLICE * MAX_NUM_RISK_SLICES <= 1. # no chance of overflowing risk tower
@@ -59,14 +60,14 @@ PERILS = [
 
 EXPOSURE_BASES = ["Payroll", "Revenue", "Sales", "Number of Employees"]
 
-def gen_random_dates(startDateStr, endDateStr, yearsDistribution : list[int]):
+def gen_random_dates(startDateStr, endDateStr, yearsSupport : list[int], yearsFreqs : list[float]):
     startDate = pd.to_datetime(startDateStr)
     endDate = pd.to_datetime(endDateStr)
     delta = endDate - startDate
     randomNumDays = random.randrange(delta.days)
     randomDelta = timedelta(days = randomNumDays)
     firstDate = startDate + randomDelta
-    secondDate = firstDate + timedelta(days = 365 * random.choice(yearsDistribution))
+    secondDate = firstDate + timedelta(days = 365 * int(np.random.choice(yearsSupport, p = yearsFreqs)))
     return str(firstDate), str(secondDate) 
 
 def gen_partition(numParts):
@@ -156,7 +157,7 @@ class Policy:
         self.expGrossLossRatio = expGrossLossRatio
         self.riskPerEventLimit = riskPerEventLimit
         self.perilDict = {f"Covers {peril}" : ("Yes" if peril in self.perils else "No") for peril in PERILS}
-        self.rectWidth = (self.riskCeil - self.riskFloor) * self.participation
+        self.rectWidth = self.riskCeil - self.riskFloor
     def get_id(self):
         return self.id
     def to_dict(self):
@@ -175,13 +176,13 @@ class Policy:
                 "Insured Industry": self.comp.industry,
                 **(self.perilDict),
                 "Exposure Base": self.expBase,
-                "Exposure Amount" : self.comp.exposedAmount,
-                "Deductible / Self-Insured Retention": self.riskFloor,
-                "Attachment Point for Excess Treaties": self.riskCeil,
+                "Exposure Amount" : self.comp.exposedAmount / NUMERICAL_SCALE,
+                "Deductible / Self-Insured Retention": min(slice[0] for slice in self.comp.risk_slices) / NUMERICAL_SCALE,
+                "Attachment Point for Excess Treaties": self.riskFloor / NUMERICAL_SCALE,
                 "Participation": self.participation,
                 "Expected Gross Loss Ratio": self.expGrossLossRatio,
-                "Risk per Occurrence Layer Limit": self.riskPerEventLimit,
-                "Risk Annual Aggregate Layer Limit": self.rectWidth
+                "Risk per Occurrence Layer Limit": self.riskPerEventLimit / NUMERICAL_SCALE,
+                "Risk Annual Aggregate Layer Limit": self.rectWidth * self.participation / NUMERICAL_SCALE
                 }
 def gen_comp_name(nameLength = 3):
     return "".join(random.choices(ALPHABET, k = nameLength))
@@ -206,7 +207,7 @@ def gen_comps(numComps = NUM_COMPANIES):
         companies.append(company)
     return companies
 
-def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity = 0.9):
+def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity = 0.8):
     riskId = 0
     for [riskFloor, riskCeil] in comp.risk_slices:
         # if riskFloor == riskCeil:
@@ -220,7 +221,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
             # participations = gen_partition(numPolicies)
             for policyIdx in range(numPolicies):
                 participation = 1 / numPolicies
-                startDate, expDate = gen_random_dates(startDateStr = "Jan 1, 2020", endDateStr = "Jan 1, 2024", yearsDistribution = [1, 3, 5, 10])
+                startDate, expDate = gen_random_dates(startDateStr = "Jan 1, 2020", endDateStr = "Jan 1, 2024", yearsSupport = [1, 2, 3, 4, 5], yearsFreqs = [.8, .1, .05, .025, .025])
                 renewalInd = random.choice([True, False])
                 # renewalInd = "Yes"
                 numPerils = random.randrange(1, len(PERILS))
@@ -253,7 +254,7 @@ for policy in policies:
     policyFrame.loc[policyId] = policy.to_dict()
 policyFrame.rename_axis(index = "Policy ID", inplace = True)
 print(policyFrame)
-policyFrame.to_csv("sample_policy_data.csv", float_format=trim_float)
+policyFrame.to_csv("sample_policy_data_long.csv", float_format=trim_float)
 
 # naics = {11: "Agriculture, Forestry, Fishing, and Hunting",
 #          21: "Mining",
