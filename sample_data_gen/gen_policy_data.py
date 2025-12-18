@@ -2,7 +2,8 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-NUM_COMPANIES = 1000
+OUTPUT_FILE = "sample_policy_data_short.csv"
+NUM_COMPANIES = 10
 MIN_LAT, MAX_LAT = 33., 42.
 MIN_LONG, MAX_LONG = -119., -80.
 MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
@@ -12,7 +13,7 @@ SAME_INDUSTRY_EXPOSURE_ADJUSTMENT = 2.0
 MIN_POLICIES_PER_SLICE = 1
 EXPECTED_POLICIES_PER_SLICE = 1.2
 EXPECTED_POLICY_MULTIPLIER = 1.05
-RISK_SLICE_GRANULARITY = -3
+RISK_SLICE_GRANULARITY = -6
 PARTITION_GRANULARITY = 1 # tenths
 RISK_ID_INCREMENT_PROBABILITY = 0.9
 MIN_RISK_SLICE = 0.051
@@ -20,8 +21,8 @@ MAX_RISK_SLICE = 0.2
 MAX_NUM_RISK_SLICES = 5
 NUMERICAL_SCALE = 1000
 MIN_RISK_PER_EVENT_LIMIT = 0.1 # minimum risk per occurrence layer limit as a fraction of aggregate layer limit
-MAX_POLICY_MULTIPLIER = 3
-MAX_POLICIES_PER_SLICE = 4
+MAX_POLICY_MULTIPLIER = 6
+MAX_POLICIES_PER_SLICE = 6
 # print(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
 #              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER)
 # assert round(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
@@ -229,7 +230,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 continue
             numPolicies = (MIN_POLICIES_PER_SLICE +
                        np.random.poisson(EXPECTED_POLICIES_PER_SLICE - MIN_POLICIES_PER_SLICE))
-            numPolicies = max(numPolicies, MAX_POLICIES_PER_SLICE)
+            numPolicies = min(numPolicies, MAX_POLICIES_PER_SLICE)
             # participations = gen_partition(numPolicies)
             for policyIdx in range(numPolicies):
                 participation = 1 / numPolicies
@@ -242,17 +243,13 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 expBase = random.choice(EXPOSURE_BASES)
                 expGrossLossRatio = random.uniform(0.5, 0.9)
                 policyMultiplier = 1 + np.random.poisson(EXPECTED_POLICY_MULTIPLIER - 1)
-                policyMultiplier = max(policyMultiplier, MAX_POLICY_MULTIPLIER)
+                policyMultiplier = min(policyMultiplier, MAX_POLICY_MULTIPLIER)
                 participation /= policyMultiplier
                 riskAggLayerLimit = (riskCeil - riskFloor)
                 riskAggLayerLimit = round(riskAggLayerLimit, RISK_SLICE_GRANULARITY)
-                riskPerEventLimit = (riskCeil - riskFloor) * participation * random.uniform(MIN_RISK_PER_EVENT_LIMIT, 1)
-                riskPerEventLimit = round(riskPerEventLimit, RISK_SLICE_GRANULARITY)
+                riskPerEventLimit = round((riskCeil - riskFloor) * random.uniform(MIN_RISK_PER_EVENT_LIMIT, 1), RISK_SLICE_GRANULARITY) * participation
                 if riskPerEventLimit == 0:
-                    riskPerEventLimit = 10 ** RISK_SLICE_GRANULARITY
-                if riskPerEventLimit == 0:
-                    print(f"0 event limit")
-                    continue
+                    riskPerEventLimit = 10 ** (-RISK_SLICE_GRANULARITY) * participation
                 
                 policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded, lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
@@ -276,7 +273,7 @@ for policy in policies:
     policyFrame.loc[policyId] = policy.to_dict()
 policyFrame.rename_axis(index = "Policy ID", inplace = True)
 print(policyFrame)
-policyFrame.to_csv("sample_policy_data_long.csv", float_format=trim_float)
+policyFrame.to_csv(OUTPUT_FILE, float_format=trim_float)
 
 # naics = {11: "Agriculture, Forestry, Fishing, and Hunting",
 #          21: "Mining",

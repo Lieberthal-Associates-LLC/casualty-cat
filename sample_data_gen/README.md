@@ -29,9 +29,9 @@ For each company, we iterate through its risk slices. For every pair $(\text{ris
 | Perils ("Covers X") | Randomly sample the number of covered perils between 1 and the total number of known perils. Randomly sample that number of perils from the list of known perils, without replacement. |
 | Exposure Base | Randomly selected (on policy level)|
 | Expected Gross Loss Ratio | Randomly sampled from $\mathrm{Unif}(0.5, 0.9)$ |
-| Risk per Occurence Layer Limit | Randomly sampled from $\mathrm{Unif}(0.1, 1) \cdot (\text{risk slice width}) \cdot (\text{participation})$ |
-| Risk Annual Aggregate Layer Limit | Computed as $\text{risk slice width}$ |
+| Risk per Occurence Layer Limit | Randomly sampled from $\mathrm{round}(\mathrm{Unif}(0.1, 1) \cdot (\text{risk slice width})) \cdot (\text{participation})$ |
+| Risk Annual Aggregate Layer Limit | Equal to $\text{risk slice width}$ |
 
-All dollar values are rounded to the millions after sampling, then eventually downscaled by 1000. All numerical values are truncated to 2 significant figures before being outputted.
+All dollar values are rounded to the millions after sampling (except Risk per Occurrence Layer Limit, described above), then eventually downscaled by 1000. Risk per Occurrence Layer Limit may be rounded to 0, in which case we bump it up to $\$1M \cdot (\text{participation})$. All numerical values are truncated to 2 significant figures after the decimal point before being outputted.
 
 20% of policies are removed to account for not every company getting every slice / line of business insured.
