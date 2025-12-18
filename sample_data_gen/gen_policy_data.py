@@ -136,7 +136,7 @@ f"""{self.name} (id {self.id}):
 class Policy:
     nextPolId = 0
     def __init__(self, comp: Company, polCount, riskId, startDate, endDate,
-                 renewalInd, lineOfBusiness, perils,
+                 renewalInd, alaeIncluded, lineOfBusiness, perils,
                  expBase, riskFloor, riskCeil, participation,
                  expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit
                  ):
@@ -148,6 +148,7 @@ class Policy:
         self.startDate = startDate
         self.endDate = endDate
         self.renewalInd = renewalInd
+        self.alaeIncluded = "Yes" if alaeIncluded else "No"
         self.lineOfBusiness = lineOfBusiness
         self.perils = perils
         self.expBase = expBase
@@ -173,6 +174,7 @@ class Policy:
                 "Policy Inception Date": self.startDate,
                 "Policy Expiration Date": self.endDate,
                 "Renewal Indicator": self.renewalInd,
+                "ALAE Included" : self.alaeIncluded,
                 "Line of Business": self.lineOfBusiness,
                 "Insured Industry": self.comp.industry,
                 **(self.perilDict),
@@ -224,6 +226,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 participation = 1 / numPolicies
                 startDate, expDate = gen_random_dates(startDateStr = "Jan 1, 2020", endDateStr = "Jan 1, 2024", yearsSupport = [1, 2, 3, 4, 5], yearsFreqs = [.8, .1, .05, .025, .025])
                 renewalInd = random.choice([True, False])
+                alaeIncluded = random.choice([True, False])
                 # renewalInd = "Yes"
                 numPerils = random.randrange(1, len(PERILS))
                 perils = random.sample(PERILS, numPerils)
@@ -239,7 +242,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                     print(f"0 event limit")
                     continue
                 
-                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, lineOfBusiness, perils,
+                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
                 policyList.append(policy)
                 if random.random() < RISK_ID_INCREMENT_PROBABILITY:
