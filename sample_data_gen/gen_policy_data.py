@@ -12,17 +12,22 @@ SAME_INDUSTRY_EXPOSURE_ADJUSTMENT = 2.0
 MIN_POLICIES_PER_SLICE = 1
 EXPECTED_POLICIES_PER_SLICE = 1.2
 EXPECTED_POLICY_MULTIPLIER = 1.05
-RISK_SLICE_GRANULARITY = -6 # millions
+RISK_SLICE_GRANULARITY = -3
 PARTITION_GRANULARITY = 1 # tenths
 RISK_ID_INCREMENT_PROBABILITY = 0.9
 MIN_RISK_SLICE = 0.051
 MAX_RISK_SLICE = 0.2
 MAX_NUM_RISK_SLICES = 5
 NUMERICAL_SCALE = 1000
-
-
+MIN_RISK_PER_EVENT_LIMIT = 0.1 # minimum risk per occurrence layer limit as a fraction of aggregate layer limit
+MAX_POLICY_MULTIPLIER = 3
+MAX_POLICIES_PER_SLICE = 4
+# print(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
+#              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER)
+# assert round(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
+#              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER, RISK_SLICE_GRANULARITY) > 0
 assert MAX_RISK_SLICE * MAX_NUM_RISK_SLICES <= 1. # no chance of overflowing risk tower
-assert MIN_RISK_SLICE * 10 ** MIN_LOG10_EXPOSURE_AMT > 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
+assert MIN_RISK_SLICE * 10 ** MIN_LOG10_EXPOSURE_AMT >= 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
 
 STATE_NAMES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -118,6 +123,9 @@ class Company:
         for sliceInd in range(numSlices):
             sliceWidth = self.exposedAmount * random.uniform(minSlice, maxSlice)
             sliceWidth = round(sliceWidth, RISK_SLICE_GRANULARITY)
+            if sliceWidth == 0:
+                print(f"size 0 slice")
+                continue
             bottomThresh = topThresh - sliceWidth
             slices.append((bottomThresh, topThresh))
             topThresh = bottomThresh
@@ -221,6 +229,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 continue
             numPolicies = (MIN_POLICIES_PER_SLICE +
                        np.random.poisson(EXPECTED_POLICIES_PER_SLICE - MIN_POLICIES_PER_SLICE))
+            numPolicies = max(numPolicies, MAX_POLICIES_PER_SLICE)
             # participations = gen_partition(numPolicies)
             for policyIdx in range(numPolicies):
                 participation = 1 / numPolicies
@@ -233,13 +242,16 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 expBase = random.choice(EXPOSURE_BASES)
                 expGrossLossRatio = random.uniform(0.5, 0.9)
                 policyMultiplier = 1 + np.random.poisson(EXPECTED_POLICY_MULTIPLIER - 1)
+                policyMultiplier = max(policyMultiplier, MAX_POLICY_MULTIPLIER)
                 participation /= policyMultiplier
                 riskAggLayerLimit = (riskCeil - riskFloor)
                 riskAggLayerLimit = round(riskAggLayerLimit, RISK_SLICE_GRANULARITY)
-                riskPerEventLimit = (riskCeil - riskFloor) * participation * random.uniform(0.1, 1)
+                riskPerEventLimit = (riskCeil - riskFloor) * participation * random.uniform(MIN_RISK_PER_EVENT_LIMIT, 1)
                 riskPerEventLimit = round(riskPerEventLimit, RISK_SLICE_GRANULARITY)
                 if riskPerEventLimit == 0:
-                    # print(f"0 event limit")
+                    riskPerEventLimit = 10 ** RISK_SLICE_GRANULARITY
+                if riskPerEventLimit == 0:
+                    print(f"0 event limit")
                     continue
                 
                 policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded, lineOfBusiness, perils,
