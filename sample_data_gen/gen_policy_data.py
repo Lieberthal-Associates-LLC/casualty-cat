@@ -2,7 +2,7 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-NUM_COMPANIES = 1000
+NUM_COMPANIES = 10
 MIN_LAT, MAX_LAT = 33., 42.
 MIN_LONG, MAX_LONG = -119., -80.
 MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
@@ -138,7 +138,7 @@ class Policy:
     def __init__(self, comp: Company, polCount, riskId, startDate, endDate,
                  renewalInd, lineOfBusiness, perils,
                  expBase, riskFloor, riskCeil, participation,
-                 expGrossLossRatio, riskPerEventLimit
+                 expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit
                  ):
         self.id = Policy.nextPolId
         Policy.nextPolId += 1
@@ -158,6 +158,7 @@ class Policy:
         self.riskPerEventLimit = riskPerEventLimit
         self.perilDict = {f"Covers {peril}" : ("Yes" if peril in self.perils else "No") for peril in PERILS}
         self.rectWidth = self.riskCeil - self.riskFloor
+        self.riskAggLayerLimit = riskAggLayerLimit
     def get_id(self):
         return self.id
     def to_dict(self):
@@ -182,7 +183,7 @@ class Policy:
                 "Participation": self.participation,
                 "Expected Gross Loss Ratio": self.expGrossLossRatio,
                 "Risk per Occurrence Layer Limit": self.riskPerEventLimit / NUMERICAL_SCALE,
-                "Risk Annual Aggregate Layer Limit": self.rectWidth * self.participation / NUMERICAL_SCALE
+                "Risk Annual Aggregate Layer Limit": self.riskAggLayerLimit / NUMERICAL_SCALE
                 }
 def gen_comp_name(nameLength = 3):
     return "".join(random.choices(ALPHABET, k = nameLength))
@@ -230,10 +231,16 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 expGrossLossRatio = random.uniform(0.5, 0.9)
                 policyMultiplier = 1 + np.random.poisson(EXPECTED_POLICY_MULTIPLIER - 1)
                 participation /= policyMultiplier
+                riskAggLayerLimit = (riskCeil - riskFloor)
+                riskAggLayerLimit = round(riskAggLayerLimit, RISK_SLICE_GRANULARITY)
                 riskPerEventLimit = (riskCeil - riskFloor) * participation * random.uniform(0.1, 1)
                 riskPerEventLimit = round(riskPerEventLimit, RISK_SLICE_GRANULARITY)
+                if riskPerEventLimit == 0:
+                    print(f"0 event limit")
+                    continue
+                
                 policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, lineOfBusiness, perils,
-                                expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit)
+                                expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
                 policyList.append(policy)
                 if random.random() < RISK_ID_INCREMENT_PROBABILITY:
                     riskId += 1
@@ -254,7 +261,7 @@ for policy in policies:
     policyFrame.loc[policyId] = policy.to_dict()
 policyFrame.rename_axis(index = "Policy ID", inplace = True)
 print(policyFrame)
-policyFrame.to_csv("sample_policy_data_long.csv", float_format=trim_float)
+policyFrame.to_csv("sample_policy_data_short.csv", float_format=trim_float)
 
 # naics = {11: "Agriculture, Forestry, Fishing, and Hunting",
 #          21: "Mining",
