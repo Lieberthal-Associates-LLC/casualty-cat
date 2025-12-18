@@ -242,7 +242,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                     print(f"0 event limit")
                     continue
                 
-                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded lineOfBusiness, perils,
+                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded, lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
                 policyList.append(policy)
                 if random.random() < RISK_ID_INCREMENT_PROBABILITY:
