@@ -29,7 +29,7 @@ For each company, we iterate through its risk slices. For every pair $(\text{ris
 | Exposure Base | Randomly selected (on policy level)|
 | Expected Gross Loss Ratio | Randomly sampled from $\mathrm{Unif}(0.5, 0.9)$ |
 | Risk per Occurence Layer Limit | Randomly sampled from $\mathrm{Unif}(0.1, 1) \cdot (\text{risk slice width}) \cdot (\text{participation})$ |
-| Risk Annual Aggregate Layer Limit | Computed as $(\text{risk slice width}) \cdot \text{(participation)}$ |
+| Risk Annual Aggregate Layer Limit | Computed as $\text{risk slice width}$ |
 
 All dollar values are rounded to the millions after sampling, then eventually downscaled by 1000. All numerical values are truncated to 2 significant figures before being outputted.
 
