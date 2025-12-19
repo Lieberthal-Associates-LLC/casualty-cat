@@ -10,8 +10,6 @@ MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
 MIN_EXPOSURE = 0.
 MAX_EXPOSURE = 0.5 / NUM_COMPANIES
 SAME_INDUSTRY_EXPOSURE_ADJUSTMENT = 2.0
-MIN_POLICIES_PER_SLICE = 1
-EXPECTED_POLICIES_PER_SLICE = 1.2
 EXPECTED_POLICY_MULTIPLIER = 1.05
 RISK_SLICE_GRANULARITY = -6
 PARTITION_GRANULARITY = 1 # tenths
@@ -22,13 +20,23 @@ MAX_NUM_RISK_SLICES = 5
 NUMERICAL_SCALE = 1000
 MIN_RISK_PER_EVENT_LIMIT = 0.1 # minimum risk per occurrence layer limit as a fraction of aggregate layer limit
 MAX_POLICY_MULTIPLIER = 6
-MAX_POLICIES_PER_SLICE = 6
+POLICIES_PER_SLICE_DISTR = {
+                1: 0.8, 2: 0.1, 3: 0.05, 4: 0.05
+            }
+EVENT_LIMIT_FRAC_DISTR = {0.5 : 0.5, 1 : 0.25, 1/3 : 0.15, 1/4 : 0.1}
 # print(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
 #              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER)
 # assert round(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
 #              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER, RISK_SLICE_GRANULARITY) > 0
 assert MAX_RISK_SLICE * MAX_NUM_RISK_SLICES <= 1. # no chance of overflowing risk tower
 assert MIN_RISK_SLICE * 10 ** MIN_LOG10_EXPOSURE_AMT >= 0.5 * 10**RISK_SLICE_GRANULARITY # no chance of empty slices
+
+POLICIES_PER_SLICE_SUPPORT = np.array(list(POLICIES_PER_SLICE_DISTR.keys()))
+POLICIES_PER_SLICE_PROB = np.array([POLICIES_PER_SLICE_DISTR[x] for x in POLICIES_PER_SLICE_SUPPORT])
+
+EVENT_LIMIT_FRAC_SUPPORT = np.array(list(EVENT_LIMIT_FRAC_DISTR.keys()))
+EVENT_LIMIT_FRAC_PROB = np.array([EVENT_LIMIT_FRAC_DISTR[x] for x in EVENT_LIMIT_FRAC_SUPPORT])
+
 
 STATE_NAMES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -75,6 +83,9 @@ def gen_random_dates(startDateStr, endDateStr, yearsSupport : list[int], yearsFr
     firstDate = startDate + randomDelta
     secondDate = firstDate + timedelta(days = 365 * int(np.random.choice(yearsSupport, p = yearsFreqs)))
     return str(firstDate), str(secondDate) 
+
+def sample_discrete(support, probs):
+    return np.random.choice(support, p = probs)
 
 def gen_partition(numParts):
     parts = []
@@ -228,9 +239,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
         for lineOfBusiness in LINES_OF_BUSINESS:
             if random.random() > policyDensity:
                 continue
-            numPolicies = (MIN_POLICIES_PER_SLICE +
-                       np.random.poisson(EXPECTED_POLICIES_PER_SLICE - MIN_POLICIES_PER_SLICE))
-            numPolicies = min(numPolicies, MAX_POLICIES_PER_SLICE)
+            numPolicies = sample_discrete(POLICIES_PER_SLICE_SUPPORT, POLICIES_PER_SLICE_PROB)
             # participations = gen_partition(numPolicies)
             for policyIdx in range(numPolicies):
                 participation = 1 / numPolicies
@@ -247,10 +256,8 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 participation /= policyMultiplier
                 riskAggLayerLimit = (riskCeil - riskFloor)
                 riskAggLayerLimit = round(riskAggLayerLimit, RISK_SLICE_GRANULARITY)
-                riskPerEventLimit = round((riskCeil - riskFloor) * random.uniform(MIN_RISK_PER_EVENT_LIMIT, 1), RISK_SLICE_GRANULARITY) * participation
-                if riskPerEventLimit == 0:
-                    riskPerEventLimit = 10 ** (-RISK_SLICE_GRANULARITY) * participation
-                
+                perEventFrac = sample_discrete(EVENT_LIMIT_FRAC_SUPPORT, EVENT_LIMIT_FRAC_PROB)
+                riskPerEventLimit = riskAggLayerLimit * perEventFrac
                 policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded, lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
                 policyList.append(policy)
