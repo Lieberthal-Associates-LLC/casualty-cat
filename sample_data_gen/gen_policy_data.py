@@ -2,7 +2,8 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-OUTPUT_FILE = "sample_policy_data_short.csv"
+POLICY_OUTPUT_FILE = "sample_policy_data_short.csv"
+EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_short.csv"
 NUM_COMPANIES = 10
 MIN_LAT, MAX_LAT = 33., 42.
 MIN_LONG, MAX_LONG = -119., -80.
@@ -102,7 +103,7 @@ def trim_float(x):
     if x == 0.:
         return "0"
     highestDigit = int(np.log10(abs(x)))-1 # -1 for (.1, 1]
-    precision = min(2, max(2, -highestDigit+2))
+    precision = max(0, -highestDigit+2)
     return f"{x:.{precision}f}"
 
 def numToLetters(i : int):
@@ -125,6 +126,13 @@ class Company:
         self.industry = industry
         self.exposedAmount = expAmount
         self.risk_slices = self.gen_risk_slices()
+    def get_id(self):
+        return self.id
+    def to_dict(self):
+        return {
+            "Exposed Amount": self.exposedAmount,
+            **{name : self.actExposures[name] for name in self.actExposures}
+        }
     
     def gen_risk_slices(self, maxNumSlices = MAX_NUM_RISK_SLICES, minSlice = MIN_RISK_SLICE, maxSlice = MAX_RISK_SLICE):
         numSlices = random.randrange(1, maxNumSlices+1)
@@ -193,7 +201,7 @@ class Policy:
                 "Insured Longitude": self.comp.longitude,
                 "Policy Inception Date": self.startDate,
                 "Policy Expiration Date": self.endDate,
-                "Renewal Indicator": self.renewalInd,
+                "Renewal Indicator": "Yes" if self.renewalInd else "No",
                 "ALAE Included" : self.alaeIncluded,
                 "Line of Business": self.lineOfBusiness,
                 "Insured Industry": self.comp.industry,
@@ -280,8 +288,15 @@ for policy in policies:
     policyFrame.loc[policyId] = policy.to_dict()
 policyFrame.rename_axis(index = "Policy ID", inplace = True)
 print(policyFrame)
-policyFrame.to_csv(OUTPUT_FILE, float_format=trim_float)
+policyFrame.to_csv(POLICY_OUTPUT_FILE, float_format=trim_float)
 
+exposureFrame = pd.DataFrame(columns = companies[0].to_dict().keys())
+for comp in companies:
+    compId = comp.get_id()
+    exposureFrame.loc[compId] = comp.to_dict()
+exposureFrame.rename_axis(index = "Insured ID", inplace = True)
+print(exposureFrame)
+exposureFrame.to_csv(EXPOSURE_OUTPUT_FILE, float_format=trim_float)
 # naics = {11: "Agriculture, Forestry, Fishing, and Hunting",
 #          21: "Mining",
 #          22: "Utilities",
