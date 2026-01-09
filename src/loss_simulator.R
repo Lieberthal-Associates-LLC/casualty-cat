@@ -46,7 +46,7 @@ sample_num_events <- function(zeroProb, meanPoisson) {
 }
 
 export("simulate_year")
-simulate_losses <- function(expMat, parameters = list(
+simulate_year <- function(expMat, parameters = list(
                                               activityNames = c(11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92),
                                               activityProbs = rep(1/5, 20),
                                               zeroEventProb = 0.7,

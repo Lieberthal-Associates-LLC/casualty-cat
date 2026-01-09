@@ -1,5 +1,7 @@
-library(modules)
+import(modules)
+import(utils)
 # Read in inputs
+
 
 export("read_policy_data")
 read_policy_data <- function(filepath = "sample_data_gen/sample_policy_data_short.csv") {
@@ -15,6 +17,6 @@ read_exposure_matrix <- function(filepath = "sample_data_gen/sample_exposure_mat
   return(matrix)
 }
 
-#read_policy_data()
+read_policy_data()
 #expMat = read_exposure_matrix()
 #expMat["X54"]

@@ -8,6 +8,7 @@ simulator = modules::use("src/loss_simulator.R")
 
 compExposures = reader$read_exposure_matrix()
 pLosses
-for(runNumber in 1:NUM_SIMULATION_RUNS)
-loss = simulator$simulate_loss(compExposures)
+for(runNumber in 1:NUM_SIMULATION_RUNS) {
+  loss = simulator$simulate_loss(compExposures)
 
+}
