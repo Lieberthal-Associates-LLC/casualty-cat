@@ -1,8 +1,41 @@
 # calculate policy payouts from losses
 
-findPayout = function(policies, loss) {
-  layerLimit = policies$Risk.Annual.Aggregate.Layer.Limit
+export("find_payout")
+find_payout = function(policies, losses, 
+                       parameters =list(
+                         activityNames = c(11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92)
+                       )) {
+  rowParticipation = policies$Participation * policies$Policy.Count
+  remainingAgg = policies$Risk.Annual.Aggregate.Layer.Limit * rowParticipation
   # subtract from layerLimit after each event
   # get num events
+  numEvents = dim(losses)[2] # length along 2nd axis (event)
   # iterate through events
+  numPolicies = dim(policies)[1]
+  payouts = array(0, dim = c(numPolicies, numEvents),
+                  dimnames = list(rownames(policies), colnames(losses)))
+  if(numEvents == 0) {
+    return(payouts)
+  }
+  for (eventIdx in 1:numEvents) {
+    cat("Event", eventIdx, "\n")
+    loss = losses[,eventIdx][paste("Company",policies$Insured.ID)]
+    inLayerLoss = pmax(0, loss - policies$Attachment.Point.for.Excess.Treaties) * rowParticipation
+    payoutLimit = policies$Risk.per.Occurrence.Layer.Limit * rowParticipation
+    payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
+    cat("Excess loss:\n")
+    print(inLayerLoss)
+    cat("Payout per Event Limit:\n")
+    print(payoutLimit)
+    cat("Remaining Layer Aggregate:\n")
+    print(remainingAgg)
+    cat("Payout:\n")
+    print(payout)
+    payouts[,eventIdx] = payout
+    remainingAgg = remainingAgg - payout
+  }
+  cat("\n\nAll payouts:\n")
+  print(payouts)
+  cat("\n\n========================================================================\n\n")
+  return(payouts)
 }

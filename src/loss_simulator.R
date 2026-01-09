@@ -5,7 +5,7 @@ import(R.oo)
 import(stats)
 import(utils)
 
-sampleSeverity <- function(numSamples = 1, mu = 1, sigma = 0.5, aPar = 2, lambdaPar = 5, p = 0.3) {
+sampleSeverity <- function(numSamples = 1, mu = 15, sigma = 2, aPar = 2, lambdaPar = 1e5, p = 0.3) {
   # with probability p, samples X ~ LogNormal(mu, sigma)
   # with probability 1-p, samples Y ~ Pareto(aPar, lambdaPar)
   X = rlnorm(numSamples, meanlog=mu, sdlog=sigma)
@@ -50,32 +50,47 @@ simulate_year <- function(expMat, parameters = list(
                                               activityNames = c(11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92),
                                               activityProbs = rep(1/5, 20),
                                               zeroEventProb = 0.7,
-                                              meanEventPoisson = 0.5)
+                                              meanEventPoisson = 2.0,
+                                              logShockSd = 0.05)
                             ) {
   #simulates ground-up loss for 1 year
   activityNames = parameters$activityNames
   activityProbs = parameters$activityProbs
-  numEvents = sample_num_events(parameters$zeroEventProb, parameters$meanEventPoisson)
-  events = sampleEvents(numEvents, activityNames, activityProbs)
   expAmt = expMat[2]
+  numCompanies = dim(expMat)[1]
   compExp = expMat[3:length(expMat)]
-  print(compExp)
-  #X_ca = S * Exp_ca * affects_a
-  totalLosses = compExp * 0
-  for(event in events) {
-    cat("Event:\n")
-    print(event)
-    cat("Loss from event:\n")
-    eventLosses = (t(t(compExp) * event$affectsActivities))
-    print(eventLosses)
-    totalLosses = totalLosses + eventLosses
+  
+  numEvents = sample_num_events(parameters$zeroEventProb, parameters$meanEventPoisson)
+  losses = array(0, dim = c(numCompanies, numEvents))
+  rownames(losses) = rownames(compExp)
+  if(numEvents == 0) {
+    cat("No catastrophe events\n")
+    return(losses)
   }
-  return(totalLosses)
+  cat("Generated", numEvents, "events\n\n")
+  colnames(losses) = paste("Event", 1:numEvents)
+  events = sampleEvents(numEvents, activityNames, activityProbs)
+  #X_ca = S * Exp_ca * affects_a
+  for(eventIdx in 1:numEvents) {
+    cat("Event", eventIdx, "\n")
+    event = events[[eventIdx]]
+    print(event)
+    cat("Losses (by activity):\n")
+    eventLoss = event$severity * t(t(compExp) * event$affectsActivities)
+    eventLoss = eventLoss * rlnorm(eventLoss, meanlog = 0, sdlog = parameters$logShockSd)
+    print(eventLoss)
+    
+    eventLoss = apply(eventLoss, 1, sum)
+    cat("\nLosses (aggregated over activities):\n")
+    print(eventLoss)
+    losses[,eventIdx] = eventLoss
+  }
+  cat("\n\nAll losses:\n")
+  print(losses)
+  cat("\n\n------------------------------------------------------------------------\n\n")
+  return(losses)
 }
 # return dataframe of simulation losses
-
-
-
 
 
 
