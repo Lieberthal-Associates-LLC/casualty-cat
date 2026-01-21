@@ -65,7 +65,7 @@ simulate_year <- function(expMat, parameters = list(
   rownames(losses) = rownames(compExp)
   if(numEvents == 0) {
     cat("No catastrophe events\n")
-    return(losses)
+    return(list(losses = losses, events = list()))
   }
   cat("Generated", numEvents, "events\n\n")
   colnames(losses) = paste("Event", 1:numEvents)
@@ -88,7 +88,7 @@ simulate_year <- function(expMat, parameters = list(
   cat("\n\nAll losses:\n")
   print(losses)
   cat("\n\n------------------------------------------------------------------------\n\n")
-  return(losses)
+  return(list(losses = losses, events = events))
 }
 # return dataframe of simulation losses
 
