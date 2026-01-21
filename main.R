@@ -10,7 +10,7 @@ analyzer = modules::use("src/payout_analyzer.R")
 parameterReader = modules::use("src/parameters.R")
 
 compExposures = policyReader$read_exposure_matrix()
-policies = reader$read_policy_data()
+policies = policyReader$read_policy_data()
 parameters = parameterReader$get_parameters()
 
 events = list()
