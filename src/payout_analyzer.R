@@ -35,9 +35,9 @@ calculate_payout_pct <- function(payouts, events) {
       }
     }
   }
-  cat("\nTotal Payout:",
+  cat("\n\nTotal Payout:",
       totalPayout,
-      "\n\nTotal Event Severity:",
+      "\nTotal Event Severity:",
       totalSeverity
       )
   if(totalSeverity != 0) {
