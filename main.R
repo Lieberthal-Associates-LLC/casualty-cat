@@ -22,4 +22,4 @@ for(runNumber in 1:NUM_SIMULATION_RUNS) {
   losses[[runNumber]] = simResult$loss
   events[[runNumber]] = simResult$events
 }
-analyzer$calculate_loss_intervals(payouts)
+analyzer$analyze(payouts, events, losses)
