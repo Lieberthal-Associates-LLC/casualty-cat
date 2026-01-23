@@ -4,7 +4,8 @@ import(fs)
 
 save_params <- function(parameters, saveDir, saveFile) {
   paramsJson = toJSON(parameters, pretty = TRUE)
-  dir_create()
+  dir_create(saveDir)
+  savePath = file.path(saveDir, saveFile)
   file.create(savePath)
   write(paramsJson, file = savePath)
 } 
@@ -23,6 +24,7 @@ get_parameters <- function(overrideDir = "input", overrideFile = "parameters.jso
     zeroEventProb = 0.7,
     meanEventPoisson = 2.0,
     logShockSd = 0.05)
+  overridePath = file.path(overrideDir, overrideFile)
   if(file.exists(overridePath)) {
     # if override is requested
     parameters = load_params(overrideDir, overrideFile)
