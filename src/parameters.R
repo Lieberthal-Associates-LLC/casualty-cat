@@ -3,7 +3,7 @@ import(jsonlite)
 import(fs)
 
 save_params <- function(parameters, saveDir, saveFile) {
-  paramsJson = toJSON(parameters, pretty = TRUE)
+  paramsJson = toJSON(parameters, pretty = TRUE, auto_unbox = FALSE)
   dir_create(saveDir)
   savePath = file.path(saveDir, saveFile)
   file.create(savePath)
@@ -11,9 +11,11 @@ save_params <- function(parameters, saveDir, saveFile) {
 } 
 
 load_params <- function(loadDir, loadFile) {
-  paramsJson = read_json(file.path(loadDir, loadFile))
-  cat("Loaded params\n", paramsJson, "\n\n")
-  return(fromJSON(paramsJson))
+  params = read_json(file.path(loadDir, loadFile), simplifyVector = TRUE)
+  print("Loaded params:")
+  print(params)
+  cat("\n\n------------------------------------------------------------------------\n\n")
+  return(params)
 }
 
 export('get_parameters')
