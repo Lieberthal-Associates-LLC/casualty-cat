@@ -1,5 +1,4 @@
 # Given simulation parameters and policy matrix, run simulation
-if(!require("EnvStats")) install.packages("EnvStats")
 import(EnvStats)
 import(R.oo)
 import(stats)

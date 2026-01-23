@@ -1,5 +1,6 @@
 if(!require(modules)) install.packages("modules")
-if(!require("files")) install.packages("files")
+if(!require(files)) install.packages("files")
+if(!require(EnvStats)) install.packages("EnvStats")
 library(modules)
 
 NUM_SIMULATION_RUNS = 5
