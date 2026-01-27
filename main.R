@@ -21,9 +21,9 @@ payouts = list()
 
 for(runNumber in 1:NUM_SIMULATION_RUNS) {
   simResult = simulator$simulate_year(compExposures, parameters)
-  payout = evaluator$find_payout(policies, simResult$loss)
+  payout = evaluator$find_payout(policies, simResult$losses)
   payouts[[runNumber]] = payout
-  losses[[runNumber]] = simResult$loss
+  losses[[runNumber]] = simResult$losses
   events[[runNumber]] = simResult$events
 }
 analyzer$analyze(payouts, events, losses)
