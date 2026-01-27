@@ -4,7 +4,7 @@ import(R.oo)
 import(stats)
 import(utils)
 
-sampleSeverity <- function(numSamples = 1, mu = 15, sigma = 2, aPar = 2, lambdaPar = 1e5, p = 0.3) {
+sampleSeverity <- function(numSamples = 1, mu = 15, sigma = 2, p = 0.7, lambdaPar = 1e5, aPar = 2) {
   # with probability p, samples X ~ LogNormal(mu, sigma)
   # with probability 1-p, samples Y ~ Pareto(aPar, lambdaPar)
   X = rlnorm(numSamples, meanlog=mu, sdlog=sigma)
@@ -25,8 +25,9 @@ sampleActivities <- function(numSamples = 1, activityNames, activityProbs) {
   return(affectsActivities)
 }
 
-sampleEvents <- function(numSamples, activityNames, activityProbs) {
-  severities = sampleSeverity(numSamples)
+sampleEvents <- function(numSamples, activityNames, activityProbs, 
+                         sevLNormLoc, sevLNormSd, sevLNormProb, sevParetoLoc, sevParetoShape) {
+  severities = sampleSeverity(numSamples, sevLNormLoc, sevLNormSd, sevLNormProb, sevParetoLoc, sevParetoShape)
   affectsActivities = sampleActivities(numSamples, activityNames, activityProbs)
   events = list()
   for(colInd in 1:length(severities)) {
@@ -62,7 +63,9 @@ simulate_year <- function(expMat, parameters) {
   }
   cat("Generated", numEvents, "events\n\n")
   colnames(losses) = paste("Event", 1:numEvents)
-  events = sampleEvents(numEvents, activityNames, activityProbs)
+  events = sampleEvents(numEvents, activityNames, activityProbs, 
+                        parameters$sevLNormLoc, parameters$sevLNormSd, parameters$sevLNormProb,
+                        parameters$sevParetoLoc, parameters$sevParetoShape)
   #X_ca = S * Exp_ca * affects_a
   for(eventIdx in 1:numEvents) {
     cat("Event", eventIdx, "\n")

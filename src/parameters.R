@@ -25,7 +25,13 @@ get_parameters <- function(overrideDir = "input", overrideFile = "parameters.jso
     activityProbs = rep(1/5, 20),
     zeroEventProb = 0.7,
     meanEventPoisson = 2.0,
-    logShockSd = 0.05)
+    logShockSd = 0.05,
+    sevLNormLoc = 15,
+    sevLNormSd = 2,
+    sevLNormProb = 0.7,
+    sevParetoLoc = 1e5,
+    sevParetoShape = 2
+    )
   overridePath = file.path(overrideDir, overrideFile)
   if(file.exists(overridePath)) {
     # if override is requested
