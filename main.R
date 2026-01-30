@@ -1,8 +1,8 @@
 if(!require(modules)) install.packages("modules")
 if(!require(files)) install.packages("files")
 if(!require(EnvStats)) install.packages("EnvStats")
-# TODO if(!require(R.oo)) install.packages("R.oo") - Needed to run on my machine
-# TODO if(!require(jsonlite)) install.packages("jsonlite") - Needed to run on my machine
+if(!require(R.oo)) install.packages("R.oo")
+if(!require(jsonlite)) install.packages("jsonlite")
 library(modules)
 
 NUM_SIMULATION_RUNS = 5
