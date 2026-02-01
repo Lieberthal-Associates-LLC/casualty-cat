@@ -3,6 +3,7 @@
 export("find_payout")
 find_payout = function(policies, losses, 
                        parameters =list(
+# TODO - Replace activityNames list with activityNames from the parameters file
                          activityNames = c(11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92)
                        )) {
   rowParticipation = policies$Participation * policies$Policy.Count

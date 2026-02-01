@@ -4,15 +4,18 @@ import(R.oo)
 import(stats)
 import(utils)
 
+# TODO - Bring in the sampleSeverity parameters from the parameter file instead of hardcoding
 sampleSeverity <- function(numSamples = 1, mu = 15, sigma = 2, p = 0.7, lambdaPar = 1e5, aPar = 2) {
   # with probability p, samples X ~ LogNormal(mu, sigma)
   # with probability 1-p, samples Y ~ Pareto(aPar, lambdaPar)
   X = rlnorm(numSamples, meanlog=mu, sdlog=sigma)
   Y = rpareto(numSamples, location = lambdaPar, shape = aPar)
   U = runif(numSamples)
-  severity = ifelse(U < p, yes = X, no = Y)
+  severity = ifelse(U < p, yes = X, no = Y) 
+  #TODO: I think it should be severity = ifelse(U < zeroEventProb, yes = X, no = Y) to use zeroEventProb
   return(severity)
 }
+
 sampleActivities <- function(numSamples = 1, activityNames, activityProbs) {
   numActivities = length(activityNames)
   if(length(activityNames) != length(activityProbs)) {
@@ -40,6 +43,7 @@ sampleEvents <- function(numSamples, activityNames, activityProbs,
   # returns list of events
 }
 
+# TODO - I see what zeroProb is doing but I can't trace it back to a parameter in the model.
 sample_num_events <- function(zeroProb, meanPoisson) {
   if(runif(1) < zeroProb) {return(0.0)}
   else {return(rpois(1, meanPoisson))}

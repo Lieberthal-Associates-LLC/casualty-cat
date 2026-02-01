@@ -3,7 +3,7 @@ if(!require(files)) install.packages("files")
 if(!require(EnvStats)) install.packages("EnvStats")
 if(!require(R.oo)) install.packages("R.oo")
 if(!require(jsonlite)) install.packages("jsonlite")
-library(modules)
+if(!require(openxlsx2)) install.packages("openxlsx2")
 
 NUM_SIMULATION_RUNS = 5
 
@@ -11,6 +11,8 @@ policyReader = modules::use("src/policy_reader.R")
 simulator = modules::use("src/loss_simulator.R")
 evaluator = modules::use("src/policy_evaluator.R")
 analyzer = modules::use("src/payout_analyzer.R")
+# Add a new module to export the data to Excel
+exporter = modules::use("src/data_exporter.R")
 parameterReader = modules::use("src/parameters.R")
 
 compExposures = policyReader$read_exposure_matrix()
