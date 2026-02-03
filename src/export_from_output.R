@@ -95,6 +95,89 @@ payouts_df <- do.call(rbind, lapply(seq_along(payouts), function(i) {
 wb$add_worksheet("payouts")
 wb$add_data("payouts", payouts_df)
 
+# Add results sheet with formulas
+wb$add_worksheet("results")
+
+# Detect number of events dynamically
+num_loss_events <- ncol(losses_df) - 2  # subtract Run and Loss_Index columns
+num_payout_events <- ncol(payouts_df) - 2
+
+# Headers
+wb$add_data("results", t(c("Run", "Total_Severity", "Total_Losses", "Total_Payouts", 
+                           "Num_Events", "Fraction_Paid")), 
+            start_row = 1, col_names = FALSE)
+
+# Get unique runs
+unique_runs <- sort(unique(events_df$Run))
+
+# Write run numbers
+wb$add_data("results", unique_runs, start_col = 1, start_row = 2, col_names = FALSE)
+
+# Add formulas for each metric
+for (i in seq_along(unique_runs)) {
+  row_num <- i + 1
+  
+  # Total Severity
+  wb$add_formula("results", sprintf("SUMIF(events!$A:$A,$A%d,events!$C:$C)", row_num),
+                 start_col = 2, start_row = row_num)
+  
+  # Total Losses - sum across all event columns dynamically
+  loss_parts <- sapply(1:num_loss_events, function(event_idx) {
+    col_letter <- LETTERS[2 + event_idx]  # starts at C (2+1)
+    sprintf("SUMIF(losses!$A:$A,$A%d,losses!$%s:$%s)", row_num, col_letter, col_letter)
+  })
+  wb$add_formula("results", paste(loss_parts, collapse = "+"), start_col = 3, start_row = row_num)
+  
+  # Total Payouts - same approach
+  payout_parts <- sapply(1:num_payout_events, function(event_idx) {
+    col_letter <- LETTERS[2 + event_idx]
+    sprintf("SUMIF(payouts!$A:$A,$A%d,payouts!$%s:$%s)", row_num, col_letter, col_letter)
+  })
+  wb$add_formula("results", paste(payout_parts, collapse = "+"), start_col = 4, start_row = row_num)
+  
+  # Num Events
+  wb$add_formula("results", sprintf("COUNTIF(events!$A:$A,$A%d)-1", row_num),
+                 start_col = 5, start_row = row_num)
+  
+  # Fraction Paid
+  wb$add_formula("results", sprintf("IF($B%d=0,0,$D%d/$B%d)", row_num, row_num, row_num),
+                 start_col = 6, start_row = row_num)
+}
+
+# Grand totals
+total_row <- length(unique_runs) + 3
+wb$add_data("results", "GRAND TOTAL", start_col = 1, start_row = total_row, col_names = FALSE)
+max_run_row <- length(unique_runs) + 1
+
+for(col_idx in 2:6) {
+  if(col_idx == 6) {  # Fraction paid needs special handling
+    wb$add_formula("results", sprintf("IF(B%d=0,0,D%d/B%d)", total_row, total_row, total_row),
+                   start_col = col_idx, start_row = total_row)
+  } else {
+    wb$add_formula("results", sprintf("SUM(%s2:%s%d)", LETTERS[col_idx], LETTERS[col_idx], max_run_row),
+                   start_col = col_idx, start_row = total_row)
+  }
+}
+
+# Distribution stats
+summary_start <- total_row + 3
+stat_labels <- c("Mean Severity", "Median Severity", "Mean Total Payout", "Mean Fraction Paid",
+                 "Payout 90% CI Lower", "Payout 90% CI Upper")
+wb$add_data("results", stat_labels, start_col = 1, start_row = summary_start, col_names = FALSE)
+
+summary_formulas <- c(
+  sprintf("AVERAGE(B2:B%d)", max_run_row),
+  sprintf("MEDIAN(B2:B%d)", max_run_row),
+  sprintf("AVERAGE(D2:D%d)", max_run_row),
+  sprintf("AVERAGE(F2:F%d)", max_run_row),
+  sprintf("PERCENTILE(D2:D%d,0.05)", max_run_row),
+  sprintf("PERCENTILE(D2:D%d,0.95)", max_run_row)
+)
+
+for (i in seq_along(summary_formulas)) {
+  wb$add_formula("results", summary_formulas[i], start_col = 2, start_row = summary_start + i - 1)
+}
+
 # Save
 wb$save("Excel_version/casualty_model_data.xlsx")
 cat("Excel file created: Excel_version/casualty_model_data.xlsx\n")

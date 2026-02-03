@@ -48,6 +48,7 @@ calculate_payout_pct <- function(payouts, events) {
 
 export('analyze')
 analyze <- function(payouts, events, losses) {
+  # TODO - Add in a calculation of the losses
   calculate_loss_intervals(payouts)
   calculate_payout_pct(payouts, events)
 }
