@@ -29,7 +29,8 @@ save_params <- function(parameters, saveDir, saveFile) {
 } 
 
 load_params <- function(loadDir, loadFile) {
-  params = read_json(file.path(loadDir, loadFile), simplifyVector = TRUE)
+  params = tryCatch(read_json(file.path(loadDir, loadFile), simplifyVector = TRUE), error = function(e)
+    throw("Parameter file is not valid JSON"))
   print("Loaded params:")
   print(params)
   cat("\n\n------------------------------------------------------------------------\n\n")
