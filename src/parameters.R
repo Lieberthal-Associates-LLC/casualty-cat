@@ -44,5 +44,3 @@ get_parameters <- function(overrideDir = "input", overrideFile = "parameters.jso
   return(parameters)
 }
 # compute parameters or import from override file path, return list of parameters
-
-save
