@@ -13,8 +13,10 @@ policyReader = modules::use("src/policy_reader.R")
 simulator = modules::use("src/loss_simulator.R")
 evaluator = modules::use("src/policy_evaluator.R")
 analyzer = modules::use("src/payout_analyzer.R")
-# Add a new module to export the data to Excel
 parameterReader = modules::use("src/parameters.R")
+exporter = modules::use("src/export_simulation.R")
+analytics = modules::use("src/export_analytics.R")
+
 
 compExposures = policyReader$read_exposure_matrix()
 policies = policyReader$read_policy_data()
@@ -35,5 +37,7 @@ if(NUM_SIMULATION_RUNS > 0) {
   analyzer$analyze(payouts, events, losses)
 }
 
-exporter = modules::use("src/export_losses.R")
-exporter$export_losses(losses, "output/losses.xlsx")
+exporter$export_outputs(parameters, policies, compExposures, events, 
+                        losses, payouts, "output/results.xlsx")
+analytics$add_severity_pivot("output/results.xlsx", "events", "Severity",
+                   row_field = "Run", col_field = "Event")
