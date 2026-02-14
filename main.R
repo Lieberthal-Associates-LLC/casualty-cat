@@ -19,7 +19,7 @@ analytics = modules::use("src/export_analytics.R")
 
 
 compExposures = policyReader$read_exposure_matrix()
-policies = policyReader$read_policy_data()
+policies = policyReader$input_policy_data()
 parameters = parameterReader$get_parameters()
 
 events = list()

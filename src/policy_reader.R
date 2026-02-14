@@ -3,7 +3,17 @@ import(utils)
 # Read in inputs
 
 
-export("read_policy_data")
+export("input_policy_data")
+input_policy_data <- function() {
+  filepath = readline("Filepath of policy data file (leave blank for sample_data_gen/sample_policy_data_short.csv): ")
+  if(nchar(filepath) == 0) {
+    return(read_policy_data())
+  }
+  else {
+    return(read_policy_data(filepath))
+  }
+}
+
 read_policy_data <- function(filepath = "sample_data_gen/sample_policy_data_short.csv") {
   data = read.csv(filepath)
   rownames(data) = data$Policy.ID
