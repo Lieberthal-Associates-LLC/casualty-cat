@@ -24,4 +24,4 @@ The parameters are:
 | sevLNormSd | The lognormal log standard deviation parameter of the event severity distribution | 2 |
 | sevLNormProb | the lognormal probability parameter of the event severity distribution | 0.7 |
 | sevParetoLoc | the Pareto location parameter of the event severity distribution | 100000 |
-| sevParetoShape | the Pareto shape parameter of the event severity distribution | 2
+| sevParetoShape | the Pareto shape parameter of the event severity distribution | 2 |
