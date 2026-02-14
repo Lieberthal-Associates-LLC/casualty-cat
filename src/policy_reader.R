@@ -1,5 +1,6 @@
 import(modules)
 import(utils)
+import(R.oo)
 # Read in inputs
 
 
@@ -15,7 +16,7 @@ input_policy_data <- function() {
 }
 
 read_policy_data <- function(filepath = "sample_data_gen/sample_policy_data_short.csv") {
-  data = read.csv(filepath)
+  data = tryCatch(read.csv(filepath), error = function(e) throw("Could not open CSV policy data file at ", filepath))
   rownames(data) = data$Policy.ID
   data = data[data$Line.of.Business == "General Liability",]
   return(data)
