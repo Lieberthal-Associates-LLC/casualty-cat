@@ -3,6 +3,7 @@
 # Bring in openxlsx2 package
 
 import(openxlsx2)
+import(R.utils)
 
 # Create a spreadsheet in the given output path
 create_spreadsheet <- function(sheetName, outputPath) {
@@ -74,6 +75,7 @@ export_outputs <- function(parameters, policies, compExposures, events,
     start_row = start_row + nrow(payout_matrix) + 2
   }
   
+  mkdirs(dirname(outputPath))
   wb$save(outputPath)
   cat("Excel file created:", outputPath, "\n")
 }

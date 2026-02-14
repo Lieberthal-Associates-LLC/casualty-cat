@@ -5,6 +5,7 @@ if(!require(R.oo)) install.packages("R.oo")
 if(!require(jsonlite)) install.packages("jsonlite")
 if(!require(fs)) install.packages("openxlsx2")
 if(!require(openxlsx2)) install.packages("openxlsx2")
+if(!require(R.utils)) install.packages("R.utils")
 
 
 NUM_SIMULATION_RUNS = 5
