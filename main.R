@@ -18,7 +18,7 @@ exporter = modules::use("src/export_simulation.R")
 analytics = modules::use("src/export_analytics.R")
 
 
-compExposures = policyReader$read_exposure_matrix()
+compExposures = policyReader$input_exposure_matrix()
 policies = policyReader$input_policy_data()
 parameters = parameterReader$get_parameters()
 
