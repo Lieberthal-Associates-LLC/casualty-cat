@@ -15,7 +15,6 @@ The parameters are:
 
 | Parameter Name | Notes | Default |
 | ---------- | ---------------------------- | ----- |
-| 
 | activityNames | Names of business activities that can be affected by catastrophe events. MUST match the columns in the exposure matrix. | [11, 21, 22, 23, 31, 42, 44, 48, 51, 52, 53, 54, 55, 56, 61, 62, 71, 72, 81, 92] |
 | activityProbs | Probability of an event affecting the corresponding business activity. MUST match activityNames in length. | [0.2] * 20 |
 | zeroEventProb | The inflation factor of the zero-inflated Poisson random variable determining how many events occur in a simulation path. | 0.7 |
