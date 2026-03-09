@@ -15,7 +15,8 @@ simulator = modules::use("src/loss_simulator.R")
 evaluator = modules::use("src/policy_evaluator.R")
 analyzer = modules::use("src/payout_analyzer.R")
 parameterReader = modules::use("src/parameters.R")
-exporter = modules::use("src/export_simulation.R")
+# exporter = modules::use("src/export_simulation.R")
+exporter = modules::use("src/export_CSV.R")
 analytics = modules::use("src/export_analytics.R")
 
 
@@ -38,7 +39,10 @@ if(NUM_SIMULATION_RUNS > 0) {
   analyzer$analyze(payouts, events, losses)
 }
 
-exporter$export_outputs(parameters, policies, compExposures, events, 
-                        losses, payouts, "output/results.xlsx")
-analytics$add_severity_pivot("output/results.xlsx", "events", "Severity",
-                   row_field = "Run", col_field = "Event")
+# exporter$export_outputs(parameters, policies, compExposures, events, 
+#                        losses, payouts, "output/results.xlsx")
+# analytics$add_severity_pivot("output/results.xlsx", "events", "Severity",
+#                   row_field = "Run", col_field = "Event")
+
+# Export CSVs
+batch_export()
