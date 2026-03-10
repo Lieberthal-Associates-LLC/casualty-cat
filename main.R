@@ -45,4 +45,4 @@ if(NUM_SIMULATION_RUNS > 0) {
 #                   row_field = "Run", col_field = "Event")
 
 # Export CSVs
-batch_export()
+exporter$batch_export()

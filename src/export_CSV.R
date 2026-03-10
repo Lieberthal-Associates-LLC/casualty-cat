@@ -65,7 +65,7 @@ flatten_events <- function(events) {
 }
 
 export_matrix_list <- function(obj_name, output_dir) {
-  obj <- get(obj_name, parent.frame())
+  obj <- get(obj_name, envir = globalenv())
   path <- file.path(output_dir, paste0(obj_name, ".csv"))
   con <- file(path, "w")
   for(run_num in seq_along(obj)) {
