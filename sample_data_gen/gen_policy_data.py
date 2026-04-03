@@ -2,9 +2,9 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-POLICY_OUTPUT_FILE = "sample_policy_data_long.csv"
-EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_long.csv"
-NUM_COMPANIES = 1000
+POLICY_OUTPUT_FILE = "sample_policy_data_short.csv"
+EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_short.csv"
+NUM_COMPANIES = 10
 MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
 MIN_EXPOSURE = 0.
 MAX_EXPOSURE = 0.5 / NUM_COMPANIES
@@ -23,6 +23,7 @@ POLICIES_PER_SLICE_DISTR = {
                 1: 0.8, 2: 0.1, 3: 0.05, 4: 0.05
             }
 EVENT_LIMIT_FRAC_DISTR = {0.5 : 0.5, 1 : 0.25, 1/3 : 0.15, 1/4 : 0.1}
+ALAE_FRAC_DISTR = {0 : 1/3, 0.1 : 1/3, 0.2 : 1/3}
 # print(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
 #              / MAX_POLICIES_PER_SLICE / MAX_POLICY_MULTIPLIER)
 # assert round(MIN_RISK_PER_EVENT_LIMIT * 10** MIN_LOG10_EXPOSURE_AMT * MIN_RISK_SLICE
@@ -35,6 +36,9 @@ POLICIES_PER_SLICE_PROB = np.array([POLICIES_PER_SLICE_DISTR[x] for x in POLICIE
 
 EVENT_LIMIT_FRAC_SUPPORT = np.array(list(EVENT_LIMIT_FRAC_DISTR.keys()))
 EVENT_LIMIT_FRAC_PROB = np.array([EVENT_LIMIT_FRAC_DISTR[x] for x in EVENT_LIMIT_FRAC_SUPPORT])
+
+ALAE_FRAC_SUPPORT = np.array(list(ALAE_FRAC_DISTR.keys()))
+ALAE_FRAC_PROB = np.array([ALAE_FRAC_DISTR[x] for x in ALAE_FRAC_SUPPORT])
 
 
 STATE_NAMES = [
@@ -160,7 +164,7 @@ f"""{self.name} (id {self.id}):
 class Policy:
     nextPolId = 0
     def __init__(self, comp: Company, polCount, riskId, startDate, endDate,
-                 renewalInd, alaeIncluded, lineOfBusiness, perils,
+                 renewalInd, alaeFraction, lineOfBusiness, perils,
                  expBase, riskFloor, riskCeil, participation,
                  expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit
                  ):
@@ -172,7 +176,7 @@ class Policy:
         self.startDate = startDate
         self.endDate = endDate
         self.renewalInd = renewalInd
-        self.alaeIncluded = "Yes" if alaeIncluded else "No"
+        self.alaeFraction = alaeFraction
         self.lineOfBusiness = lineOfBusiness
         self.perils = perils
         self.expBase = expBase
@@ -196,7 +200,7 @@ class Policy:
                 "Policy Inception Date": self.startDate,
                 "Policy Expiration Date": self.endDate,
                 "Renewal Indicator": "Yes" if self.renewalInd else "No",
-                "ALAE Included" : self.alaeIncluded,
+                "ALAE Fraction" : self.alaeFraction,
                 "Line of Business": self.lineOfBusiness,
                 "Insured Industry": self.comp.industry,
                 **(self.perilDict),
@@ -245,7 +249,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 participation = 1 / numPolicies
                 startDate, expDate = gen_random_dates(startDateStr = "Jan 1, 2020", endDateStr = "Jan 1, 2024", yearsSupport = [1, 2, 3, 4, 5], yearsFreqs = [.8, .1, .05, .025, .025])
                 renewalInd = random.choice([True, False])
-                alaeIncluded = random.choice([True, False])
+                alaeFraction = sample_discrete(ALAE_FRAC_SUPPORT, ALAE_FRAC_PROB)
                 # renewalInd = "Yes"
                 numPerils = random.randrange(1, len(PERILS))
                 perils = random.sample(PERILS, numPerils)
@@ -258,7 +262,7 @@ def gen_comp_policies(comp : Company, policyList : list[Policy], policyDensity =
                 riskAggLayerLimit = round(riskAggLayerLimit, RISK_SLICE_GRANULARITY)
                 perEventFrac = sample_discrete(EVENT_LIMIT_FRAC_SUPPORT, EVENT_LIMIT_FRAC_PROB)
                 riskPerEventLimit = riskAggLayerLimit * perEventFrac
-                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeIncluded, lineOfBusiness, perils,
+                policy = Policy(comp, policyMultiplier, riskId, startDate, expDate, renewalInd, alaeFraction, lineOfBusiness, perils,
                                 expBase, riskFloor, riskCeil, participation, expGrossLossRatio, riskPerEventLimit, riskAggLayerLimit)
                 policyList.append(policy)
                 if random.random() < RISK_ID_INCREMENT_PROBABILITY:

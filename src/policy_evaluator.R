@@ -23,7 +23,7 @@ find_payout = function(policies, losses,
     loss = losses[,eventIdx][paste("Company",policies$Insured.ID)]
     inLayerLoss = pmax(0, loss - policies$Attachment.Point.for.Excess.Treaties) * rowParticipation
     payoutLimit = policies$Risk.per.Occurrence.Layer.Limit * rowParticipation
-    payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
+    payout = pmin(inLayerLoss, payoutLimit, remainingAgg) * (1 + policies$ALAE.Fraction)
     cat("Excess loss:\n")
     print(inLayerLoss)
     cat("Payout per Event Limit:\n")
