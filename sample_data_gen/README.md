@@ -3,8 +3,7 @@
 | ---------- | ---------------------------- |
 | ID | Assigned sequentially |
 | Name | Random 3-letter sequence |
-| Coordinates | Randomly sampled in a rectangle |
-| State | Randomly sampled (independently of coordinates) |
+| State | Randomly sampled |
 | Industry | Randomly sampled |
 | Activity Exposures (not outputted) | Randomly sampled from $\mathrm{Unif}(0, \frac{0.5}{\text{number of companies}})$, after which the exposure corresponding to the company's own industry is doubled. |
 | Exposure Amount | Randomly sampled as $10^{\mathrm{Unif}(7, 9)}$. |
@@ -24,7 +23,7 @@ For each company, we iterate through its risk slices. For every pair $(\text{ris
 | Policy Inception Date | Randomly sample date in the past |
 | Policy Expiration Date | Sampled as $(\text{policy inception date})+ Y \text{ years}$, where $Y \sim \mathrm{Discrete}[1 \mathrm{\ wp\ } 0.8,\ 2 \mathrm{\ wp\ } 0.1,\ 3 \mathrm{\ wp\ } 0.05,\ 4 \mathrm{\ wp\ } 0.025,\ 5 \mathrm{\ wp\ } 0.025]$   |
 | Renewal Indicator | Randomly selected |
-| ALAE Included | Randomly selected |
+| ALAE Fraction | Sampled from $\mathrm{Discrete}[0 \mathrm{\ wp\ } \frac13,\ 0.1 \mathrm{\ wp\ } \frac13,\ 0.2 \mathrm{\ wp\ } \frac13]$ |
 | Line of Business | Randomly selected (can vary between multiple policies on the same risk rectangle) |
 | Perils ("Covers X") | Randomly sample the number of covered perils between 1 and the total number of known perils. Randomly sample that number of perils from the list of known perils, without replacement. |
 | Exposure Base | Randomly selected (on policy level)|
