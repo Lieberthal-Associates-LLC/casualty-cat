@@ -2,11 +2,9 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-POLICY_OUTPUT_FILE = "sample_policy_data_short.csv"
-EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_short.csv"
-NUM_COMPANIES = 10
-MIN_LAT, MAX_LAT = 33., 42.
-MIN_LONG, MAX_LONG = -119., -80.
+POLICY_OUTPUT_FILE = "sample_policy_data_long.csv"
+EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_long.csv"
+NUM_COMPANIES = 1000
 MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
 MIN_EXPOSURE = 0.
 MAX_EXPOSURE = 0.5 / NUM_COMPANIES
@@ -113,15 +111,13 @@ def numToLetters(i : int):
     return f"{left}{ALPHABET[right]}"
 
 class Company:
-    def __init__(self, compId, compName, coords, state,
+    def __init__(self, compId, compName, state,
                   industry, actExposures, expAmount):
         if actExposures.keys() != set(ACT_NAMES):
             raise Exception("Company missing keys in exposures")
         self.id = compId
         self.name = compName
         self.actExposures = actExposures
-        self.latitude = coords[0]
-        self.longitude = coords[1]
         self.state = state
         self.industry = industry
         self.exposedAmount = expAmount
@@ -156,7 +152,7 @@ class Company:
 f"""{self.name} (id {self.id}): 
     Industry: {self.industry}
     Exposed amount: {self.exposedAmount}
-    Location: ({self.latitude}, {self.longitude:.4f}), {self.state}
+    Location: {self.state}
     Exposures: {[f'{self.actExposures[act]:.6f}' for act in ACT_NAMES]}
 """)
     def __repr__(self):
@@ -197,8 +193,6 @@ class Policy:
                 "Risk ID" : self.riskId,
                 "Insured Name": self.comp.name,
                 "Insured Address": self.comp.state,
-                "Insured Latitude": self.comp.latitude,
-                "Insured Longitude": self.comp.longitude,
                 "Policy Inception Date": self.startDate,
                 "Policy Expiration Date": self.endDate,
                 "Renewal Indicator": "Yes" if self.renewalInd else "No",
@@ -222,8 +216,6 @@ def gen_comps(numComps = NUM_COMPANIES):
     companies = []# id : Company
     for compId in range(numComps):
         compName = gen_comp_name()
-        coords = (random.uniform(MIN_LAT, MAX_LAT),
-                  random.uniform(MIN_LONG, MAX_LONG))
         state = random.choice(STATE_NAMES)
         industry = random.choice(ACT_NAMES)
         exposedAmt = 10 ** random.uniform(MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT)
@@ -232,7 +224,7 @@ def gen_comps(numComps = NUM_COMPANIES):
         actExposures[industry] *= SAME_INDUSTRY_EXPOSURE_ADJUSTMENT
         actExposures[industry] = min(1, actExposures[industry])
         company = Company(
-            compId, compName, coords, state,
+            compId, compName, state,
             industry, actExposures, exposedAmt
         )
         companies.append(company)

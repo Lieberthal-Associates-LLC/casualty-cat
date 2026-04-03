@@ -6,7 +6,22 @@ To run this program, you need:
 - An internet connection (to automatically install packages the first time you run the program)
 
 ## Usage
-1. Run `Rscript main.R` or otherwise source main.R
+1. Run `Rscript main.R` or otherwise source main.R (e.g. Ctrl+Shift+S in RStudio).
+2. When prompted, input the path to your input data files (or leave blank for default).
+
+## Inputs
+Two data file inputs are needed for the program: the company-industry exposure matrix and policy table.
+
+These CSV files can be generated from templates in the `data_templates` directory, and samples are provided.
+
+To create your own data file:
+1. Replace the values in the corresponding Excel template in `data_templates`.
+2. Export as CSV
+
+Then each time you run the program, you can input the path to the generated CSV to run the program on the inputs you put into Excel.
+
+## Outputs
+The Excel file containing simulation results is outputted in the `outputs` directory.
 
 ## Parameters
 To vary model parameters, edit `input/parameters.json`, which is regenerated every time you run the program. To reset to defaults, delete `input/parameters.json`.
