@@ -13,12 +13,14 @@ DEFAULT_PARAMETERS = list(
   sevLNormSd = 2,
   sevLNormProb = 0.7,
   sevParetoLoc = 1e5,
-  sevParetoShape = 2
+  sevParetoShape = 2,
+  alaeBeforePolicyTerms = FALSE
 )
 SINGLE_VALUE_PARAMETERS = c("zeroEventProb", "meanEventPoisson",
                             "logShockSd", "sevLNormLoc",
                             "sevLNormSd", "sevLNormProb",
-                            "sevParetoLoc", "sevParetoShape")
+                            "sevParetoLoc", "sevParetoShape",
+                            "alaeBeforePolicyTerms")
 
 save_params <- function(parameters, saveDir, saveFile) {
   paramsJson = toJSON(parameters, pretty = TRUE, auto_unbox = FALSE)
@@ -60,8 +62,9 @@ validate_parameters <- function(params) {
   assert(params$logShockSd >= 0, "Violated rule: logShockSd >= 0")
   assert(params$sevLNormSd >= 0, "Violated rule: sevLNormSd >= 0")
   assert(params$sevLNormProb >= 0 && params$sevLNormProb <= 1, "Violated rule: 0 <= sevLNormProb <= 1")
-  
-  
+  assert(is.logical(params$alaeBeforePolicyTerms), "Violated rule: alaeBeforePolicyTerms must be TRUE or FALSE")
+
+
 }
 
 export('get_parameters')

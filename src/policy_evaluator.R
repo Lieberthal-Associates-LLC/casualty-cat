@@ -21,9 +21,15 @@ find_payout = function(policies, losses,
   for (eventIdx in 1:numEvents) {
     cat("Event", eventIdx, "\n")
     loss = losses[,eventIdx][paste("Company",policies$Insured.ID)]
+    if(parameters$alaeBeforePolicyTerms) {
+      loss = loss * (1 + policies$ALAE.Fraction)
+    }
     inLayerLoss = pmax(0, loss - policies$Attachment.Point.for.Excess.Treaties) * rowParticipation
     payoutLimit = policies$Risk.per.Occurrence.Layer.Limit * rowParticipation
-    payout = pmin(inLayerLoss, payoutLimit, remainingAgg) * (1 + policies$ALAE.Fraction)
+    payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
+    if(!parameters$alaeBeforePolicyTerms) {
+      payout = payout * (1 + policies$ALAE.Fraction)
+    }
     cat("Excess loss:\n")
     print(inLayerLoss)
     cat("Payout per Event Limit:\n")
