@@ -2,21 +2,21 @@ import random; random.seed(42)
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-POLICY_OUTPUT_FILE = "sample_policy_data_short.csv"
-EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_short.csv"
-NUM_COMPANIES = 10
+POLICY_OUTPUT_FILE = "sample_policy_data_long.csv"
+EXPOSURE_OUTPUT_FILE = "sample_exposure_matrix_long.csv"
+NUM_COMPANIES = 500
 MIN_LOG10_EXPOSURE_AMT, MAX_LOG10_EXPOSURE_AMT = 7, 9
 MIN_EXPOSURE = 0.
 MAX_EXPOSURE = 0.5 / NUM_COMPANIES
 SAME_INDUSTRY_EXPOSURE_ADJUSTMENT = 2.0
 EXPECTED_POLICY_MULTIPLIER = 1.05
 RISK_SLICE_GRANULARITY = -6
-PARTITION_GRANULARITY = 1 # tenths
+PARTITION_GRANULARITY = 1 
 RISK_ID_INCREMENT_PROBABILITY = 0.9
 MIN_RISK_SLICE = 0.051
 MAX_RISK_SLICE = 0.2
 MAX_NUM_RISK_SLICES = 5
-NUMERICAL_SCALE = 1000
+NUMERICAL_SCALE = 1#000
 MIN_RISK_PER_EVENT_LIMIT = 0.1 # minimum risk per occurrence layer limit as a fraction of aggregate layer limit
 MAX_POLICY_MULTIPLIER = 6
 POLICIES_PER_SLICE_DISTR = {
