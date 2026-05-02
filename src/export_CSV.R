@@ -86,10 +86,11 @@ export_matrix_list <- function(obj_name, output_dir) {
 #' @param output_dir Directory to write CSVs (default: "output")
 batch_export <- function(output_dir = "output") {
   # Simple data frames
-  simple_objs = c("parameters", "policies", "compExposures")
+  # simple_objs = c("parameters", "policies", "compExposures")
+  simple_objs = c("policies", "compExposures")
   for(name in simple_objs) {
-    write.csv(get(name, parent.frame()), 
-              file.path(output_dir, paste0(name, ".csv")), 
+    write.csv(get(name, parent.frame()),
+              file.path(output_dir, paste0(name, ".csv")),
               row.names = FALSE)
     cat("Wrote", name, ".csv\n")
   }
