@@ -35,10 +35,10 @@ The parameters are:
 | zeroEventProb | The inflation factor of the zero-inflated Poisson random variable determining how many events occur in a simulation path. | 0.7 |
 | meanEventPoisson | The Poisson mean parameter of the zero-inflated Poisson random variable determining how many events occur in a simulation path. | 2 |
 | logShockSd | The log standard deviation parameter of the lognormal idiosyncratic shock that scales each (company, event, activity) combination's loss. | 0.05
-| sevLNormLoc | The lognormal location parameter of the event severity distribution | 15 |
+| sevLNormLoc | The lognormal location parameter of the event severity distribution | 20 |
 | sevLNormSd | The lognormal log standard deviation parameter of the event severity distribution | 2 |
 | sevLNormProb | the lognormal probability parameter of the event severity distribution | 0.7 |
-| sevParetoLoc | the Pareto location parameter of the event severity distribution | 100000 |
+| sevParetoLoc | the Pareto location parameter of the event severity distribution | 100000000 |
 | sevParetoShape | the Pareto shape parameter of the event severity distribution | 2 |
 | alaeBeforePolicyTerms | If TRUE, the banded ALAE fraction grosses up the ground-up loss before policy terms (attachment, per-occurrence limit, remaining aggregate) are applied; if FALSE, it loads the post-policy-terms payout. The band lookup itself always uses the pre-ALAE post-policy-terms payout. | FALSE |
 | alaeBandMinima | Lower bounds of the per-(policy, event) payout bands used to look up the ALAE fraction. Must be strictly increasing and start at 0. Same length as `alaeBandFractions`. | [0, 1000000, 10000000] |
