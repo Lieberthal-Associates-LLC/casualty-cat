@@ -77,7 +77,7 @@ simulate_year <- function(expMat, parameters) {
     print(event)
     cat("Losses (by activity):\n")
     eventLoss = event$severity * t(t(compExp) * event$affectsActivities)
-    eventLoss = eventLoss * rlnorm(eventLoss, meanlog = 0, sdlog = parameters$logShockSd)
+    eventLoss = eventLoss * rlnorm(eventLoss, meanlog = -parameters$logShockSd^2 / 2, sdlog = parameters$logShockSd)
     print(eventLoss)
     
     eventLoss = apply(eventLoss, 1, sum)

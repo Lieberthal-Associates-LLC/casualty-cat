@@ -8,6 +8,10 @@ find_payout = function(policies, losses,
                        )) {
   rowParticipation = policies$Participation * policies$Policy.Count
   remainingAgg = policies$Risk.Annual.Aggregate.Layer.Limit * rowParticipation
+  attachment = policies$Attachment.Point.for.Excess.Treaties
+  payoutLimit = policies$Risk.per.Occurrence.Layer.Limit * rowParticipation
+  bandMinima = parameters$alaeBandMinima
+  bandFractions = parameters$alaeBandFractions
   # subtract from layerLimit after each event
   # get num events
   numEvents = dim(losses)[2] # length along 2nd axis (event)
@@ -21,14 +25,17 @@ find_payout = function(policies, losses,
   for (eventIdx in 1:numEvents) {
     cat("Event", eventIdx, "\n")
     loss = losses[,eventIdx][paste("Company",policies$Insured.ID)]
+    # Pre-ALAE post-policy-terms payout drives the band lookup, regardless of alaeBeforePolicyTerms.
+    tentativeInLayer = pmax(0, loss - attachment) * rowParticipation
+    tentativePayout = pmin(tentativeInLayer, payoutLimit, remainingAgg)
+    alaeFrac = bandFractions[findInterval(tentativePayout, bandMinima)]
     if(parameters$alaeBeforePolicyTerms) {
-      loss = loss * (1 + policies$ALAE.Fraction)
-    }
-    inLayerLoss = pmax(0, loss - policies$Attachment.Point.for.Excess.Treaties) * rowParticipation
-    payoutLimit = policies$Risk.per.Occurrence.Layer.Limit * rowParticipation
-    payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
-    if(!parameters$alaeBeforePolicyTerms) {
-      payout = payout * (1 + policies$ALAE.Fraction)
+      grossLoss = loss * (1 + alaeFrac)
+      inLayerLoss = pmax(0, grossLoss - attachment) * rowParticipation
+      payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
+    } else {
+      inLayerLoss = tentativeInLayer
+      payout = tentativePayout * (1 + alaeFrac)
     }
     cat("Excess loss:\n")
     print(inLayerLoss)
@@ -36,6 +43,8 @@ find_payout = function(policies, losses,
     print(payoutLimit)
     cat("Remaining Layer Aggregate:\n")
     print(remainingAgg)
+    cat("Banded ALAE fraction:\n")
+    print(alaeFrac)
     cat("Payout:\n")
     print(payout)
     payouts[,eventIdx] = payout

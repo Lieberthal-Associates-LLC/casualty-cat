@@ -14,7 +14,9 @@ DEFAULT_PARAMETERS = list(
   sevLNormProb = 0.7,
   sevParetoLoc = 1e5,
   sevParetoShape = 2,
-  alaeBeforePolicyTerms = FALSE
+  alaeBeforePolicyTerms = FALSE,
+  alaeBandMinima = c(0, 1e6, 1e7),
+  alaeBandFractions = c(0.125, 0.175, 0.225)
 )
 SINGLE_VALUE_PARAMETERS = c("zeroEventProb", "meanEventPoisson",
                             "logShockSd", "sevLNormLoc",
@@ -49,7 +51,7 @@ validate_parameters <- function(params) {
   for(fieldName in names(DEFAULT_PARAMETERS)) {
     assert(fieldName %in% names(params), "Required parameter ", fieldName, " is missing from parameter file")
   }
-  assert(length(params$activityNames) == length(params$activityProbs), 
+  assert(length(params$activityNames) == length(params$activityProbs),
          "Lengths of activityNames (", length(params$activityNames), ") and activityProbs (",
          length(params$activityProbs), ") are not equal.")
   for(fieldName in SINGLE_VALUE_PARAMETERS) {
@@ -63,8 +65,15 @@ validate_parameters <- function(params) {
   assert(params$sevLNormSd >= 0, "Violated rule: sevLNormSd >= 0")
   assert(params$sevLNormProb >= 0 && params$sevLNormProb <= 1, "Violated rule: 0 <= sevLNormProb <= 1")
   assert(is.logical(params$alaeBeforePolicyTerms), "Violated rule: alaeBeforePolicyTerms must be TRUE or FALSE")
-
-
+  assert(length(params$alaeBandMinima) == length(params$alaeBandFractions),
+         "Lengths of alaeBandMinima (", length(params$alaeBandMinima), ") and alaeBandFractions (",
+         length(params$alaeBandFractions), ") are not equal.")
+  assert(length(params$alaeBandMinima) >= 1, "Violated rule: alaeBandMinima must have at least one entry")
+  assert(params$alaeBandMinima[1] == 0, "Violated rule: alaeBandMinima[1] must be 0 (so every payout falls in a band)")
+  if(length(params$alaeBandMinima) > 1) {
+    assert(all(diff(params$alaeBandMinima) > 0), "Violated rule: alaeBandMinima must be strictly increasing")
+  }
+  assert(min(params$alaeBandFractions) >= 0, "Violated rule: alaeBandFractions must be at least 0")
 }
 
 export('get_parameters')

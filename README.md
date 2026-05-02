@@ -40,3 +40,6 @@ The parameters are:
 | sevLNormProb | the lognormal probability parameter of the event severity distribution | 0.7 |
 | sevParetoLoc | the Pareto location parameter of the event severity distribution | 100000 |
 | sevParetoShape | the Pareto shape parameter of the event severity distribution | 2 |
+| alaeBeforePolicyTerms | If TRUE, the banded ALAE fraction grosses up the ground-up loss before policy terms (attachment, per-occurrence limit, remaining aggregate) are applied; if FALSE, it loads the post-policy-terms payout. The band lookup itself always uses the pre-ALAE post-policy-terms payout. | FALSE |
+| alaeBandMinima | Lower bounds of the per-(policy, event) payout bands used to look up the ALAE fraction. Must be strictly increasing and start at 0. Same length as `alaeBandFractions`. | [0, 1000000, 10000000] |
+| alaeBandFractions | ALAE fraction for each band: for a payout `p`, the fraction is `alaeBandFractions[i]` where `i` is the largest index with `alaeBandMinima[i] <= p` (step lookup, applied to the entire payout — not marginal). Same length as `alaeBandMinima`. | [0.125, 0.175, 0.225] |
