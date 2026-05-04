@@ -36,7 +36,7 @@ if(NUM_SIMULATION_RUNS > 0) {
     losses[[runNumber]] = simResult$losses
     events[[runNumber]] = simResult$events
   }
-  analyzer$analyze(payouts, events, losses)
+  analyzer$analyze(payouts, events, losses, parameters)
 }
 
 # exporter$export_outputs(parameters, policies, compExposures, events, 

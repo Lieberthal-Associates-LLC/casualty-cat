@@ -1,18 +1,22 @@
 # Interpret and visualize loss simulation results
 import(stats)
 
-calculate_loss_intervals <- function(losses, parameters = list()) {
+calculate_loss_intervals <- function(losses, parameters) {
   lossesPerYear = unlist(lapply(losses, sum))
-  cat("\n90% confidence confidence interval for losses:", 
-      quantile(lossesPerYear, 0.05),
-      quantile(lossesPerYear, 0.95))
+  alpha = (1 - parameters$confidenceLevel) / 2
+  header = paste0("\n", round(parameters$confidenceLevel * 100), "% confidence interval for losses:")
+  cat(header,
+      quantile(lossesPerYear, alpha),
+      quantile(lossesPerYear, 1 - alpha))
 }
 
-calculate_payout_intervals <- function(payouts, parameters = list()) {
+calculate_payout_intervals <- function(payouts, parameters) {
   payoutsPerYear = unlist(lapply(payouts, sum))
-  cat("\n90% confidence confidence interval for payouts:", 
-      quantile(payoutsPerYear, 0.05),
-      quantile(payoutsPerYear, 0.95),
+  alpha = (1 - parameters$confidenceLevel) / 2
+  header = paste0("\n", round(parameters$confidenceLevel * 100), "% confidence interval for payouts:")
+  cat(header,
+      quantile(payoutsPerYear, alpha),
+      quantile(payoutsPerYear, 1 - alpha),
       "\n")
 }
 # print list of loss confidence intervals by policy
@@ -62,10 +66,10 @@ calculate_payout_pct <- function(payouts, events, losses) {
 }
 
 export('analyze')
-analyze <- function(payouts, events, losses) {
+analyze <- function(payouts, events, losses, parameters) {
   # TODO - Add in a calculation of the losses
   cat("\n\n========================================================================\n\n")
-  calculate_loss_intervals(losses)
-  calculate_payout_intervals(payouts)
+  calculate_loss_intervals(losses, parameters)
+  calculate_payout_intervals(payouts, parameters)
   calculate_payout_pct(payouts, events, losses)
 }

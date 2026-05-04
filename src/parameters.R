@@ -16,13 +16,15 @@ DEFAULT_PARAMETERS = list(
   sevParetoShape = 2,
   alaeBeforePolicyTerms = FALSE,
   alaeBandMinima = c(0, 1e6, 1e7),
-  alaeBandFractions = c(0.125, 0.175, 0.225)
+  alaeBandFractions = c(0.125, 0.175, 0.225),
+  confidenceLevel = 0.90
 )
 SINGLE_VALUE_PARAMETERS = c("zeroEventProb", "meanEventPoisson",
                             "logShockSd", "sevLNormLoc",
                             "sevLNormSd", "sevLNormProb",
                             "sevParetoLoc", "sevParetoShape",
-                            "alaeBeforePolicyTerms")
+                            "alaeBeforePolicyTerms",
+                            "confidenceLevel")
 
 save_params <- function(parameters, saveDir, saveFile) {
   paramsJson = toJSON(parameters, pretty = TRUE, auto_unbox = FALSE)
@@ -74,6 +76,7 @@ validate_parameters <- function(params) {
     assert(all(diff(params$alaeBandMinima) > 0), "Violated rule: alaeBandMinima must be strictly increasing")
   }
   assert(min(params$alaeBandFractions) >= 0, "Violated rule: alaeBandFractions must be at least 0")
+  assert(params$confidenceLevel > 0 && params$confidenceLevel < 1, "Violated rule: 0 < confidenceLevel < 1")
 }
 
 export('get_parameters')
