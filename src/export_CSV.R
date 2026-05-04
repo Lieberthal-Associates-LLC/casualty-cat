@@ -64,6 +64,23 @@ flatten_events <- function(events) {
   do.call(rbind, rows)
 }
 
+# Flatten parameters
+flatten_parameters <- function(params) {
+  rows <- list()
+  for (nm in names(params)) {
+    val <- params[[nm]]
+    for (i in seq_along(val)) {
+      rows[[length(rows) + 1]] <- data.frame(
+        parameter = nm,
+        index     = i,
+        value     = as.character(val[[i]]),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  do.call(rbind, rows)
+}
+
 export_matrix_list <- function(obj_name, output_dir) {
   obj <- get(obj_name, envir = globalenv())
   path <- file.path(output_dir, paste0(obj_name, ".csv"))
@@ -87,6 +104,10 @@ export_matrix_list <- function(obj_name, output_dir) {
 batch_export <- function(output_dir = "output") {
   # Simple data frames
   # simple_objs = c("parameters", "policies", "compExposures")
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  params_flat <- flatten_parameters(get("parameters", parent.frame()))
+  write.csv(params_flat, file.path(output_dir, "parameters.csv"), row.names = FALSE)
+  cat("Wrote parameters.csv\n")
   simple_objs = c("policies", "compExposures")
   for(name in simple_objs) {
     write.csv(get(name, parent.frame()),
