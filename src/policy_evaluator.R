@@ -33,9 +33,11 @@ find_payout = function(policies, losses,
       grossLoss = loss * (1 + alaeFrac)
       inLayerLoss = pmax(0, grossLoss - attachment) * rowParticipation
       payout = pmin(inLayerLoss, payoutLimit, remainingAgg)
+      aggregateBurn = payout
     } else {
       inLayerLoss = tentativeInLayer
       payout = tentativePayout * (1 + alaeFrac)
+      aggregateBurn = tentativePayout
     }
     cat("Excess loss:\n")
     print(inLayerLoss)
@@ -48,7 +50,7 @@ find_payout = function(policies, losses,
     cat("Payout:\n")
     print(payout)
     payouts[,eventIdx] = payout
-    remainingAgg = remainingAgg - payout
+    remainingAgg = remainingAgg - aggregateBurn
   }
   cat("\n\nAll payouts:\n")
   print(payouts)
