@@ -7,10 +7,12 @@ import(R.oo)
 read_policy_data <- function(filepath = "sample_data_gen/sample_policy_data_short.csv") {
   data = tryCatch(read.csv(filepath), error = function(e) throw("Could not open CSV policy data file at ", filepath))
   rownames(data) = data$Policy.ID
-  data = data[data$Line.of.Business == "General Liability",]
   return(data)
 }
 # returns policy dataframe
+# Every policy in the file is evaluated. The model applies an insured's ground-up
+# loss to all of that insured's policies regardless of Line of Business, so
+# selecting a subset of lines is a property of the input file, not of the reader.
 
 export("input_policy_data")
 input_policy_data <- function() {
